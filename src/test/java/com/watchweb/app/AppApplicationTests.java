@@ -6,6 +6,10 @@ import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.service.AuthService;
 import com.watchweb.app.domain.comment.dto.CreateWatchCommentRequest;
 import com.watchweb.app.domain.comment.service.WatchCommentService;
+import com.watchweb.app.domain.post.dto.CreatePostRequest;
+import com.watchweb.app.domain.post.entity.PostStatus;
+import com.watchweb.app.domain.post.repository.PostRepository;
+import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
 import com.watchweb.app.domain.review.service.ReviewService;
@@ -98,6 +102,12 @@ class AppApplicationTests {
 
     @Autowired
     private WatchCommentService watchCommentService;
+
+    @Autowired
+    private PostService postService;
+
+    @Autowired
+    private PostRepository postRepository;
 
     @Autowired
     private WatchSubmissionModerationService watchSubmissionModerationService;
@@ -542,6 +552,65 @@ class AppApplicationTests {
         assertThatThrownBy(() -> watchCommentService.delete(watch.getId(), comment.id(), otherUser.user().id(), false))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Comment belongs to another user");
+    }
+
+    @Test
+    void createsUserPostAsPendingModeration() {
+        var user = authService.register(new RegisterRequest("postauthor", "postauthor@example.com", "StrongPassword123"));
+
+        var response = postService.create(
+                user.user().id(),
+                new CreatePostRequest("My first post", "This post should wait for moderation.")
+        );
+
+        assertThat(response.id()).isNotNull();
+        assertThat(response.authorId()).isEqualTo(user.user().id());
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThat(postRepository.findById(response.id()).orElseThrow().getStatus()).isEqualTo(PostStatus.PENDING);
+    }
+
+    @Test
+    void listsOnlyApprovedPosts() {
+        var user = authService.register(new RegisterRequest("postlistauthor", "postlistauthor@example.com", "StrongPassword123"));
+        var pendingPost = postService.create(user.user().id(), new CreatePostRequest("Pending post", "Not visible yet."));
+        var approvedPost = postService.create(user.user().id(), new CreatePostRequest("Approved post", "Visible after moderation."));
+        var approvedEntity = postRepository.findById(approvedPost.id()).orElseThrow();
+        approvedEntity.approve();
+        postRepository.saveAndFlush(approvedEntity);
+
+        var page = postService.listApproved(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        assertThat(page.getContent())
+                .anySatisfy(post -> {
+                    assertThat(post.id()).isEqualTo(approvedPost.id());
+                    assertThat(post.status()).isEqualTo(PostStatus.APPROVED);
+                })
+                .noneSatisfy(post -> assertThat(post.id()).isEqualTo(pendingPost.id()));
+    }
+
+    @Test
+    void returnsApprovedPostById() {
+        var user = authService.register(new RegisterRequest("postdetailsauthor", "postdetailsauthor@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Approved details", "Visible details."));
+        var entity = postRepository.findById(post.id()).orElseThrow();
+        entity.approve();
+        postRepository.saveAndFlush(entity);
+
+        var response = postService.getApprovedById(post.id());
+
+        assertThat(response.id()).isEqualTo(post.id());
+        assertThat(response.title()).isEqualTo("Approved details");
+        assertThat(response.status()).isEqualTo(PostStatus.APPROVED);
+    }
+
+    @Test
+    void rejectsPendingPostPublicDetails() {
+        var user = authService.register(new RegisterRequest("postpendingdetails", "postpendingdetails@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Pending details", "Hidden details."));
+
+        assertThatThrownBy(() -> postService.getApprovedById(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
     }
 
     @Test
