@@ -4,6 +4,8 @@ import com.watchweb.app.domain.auth.dto.RegisterRequest;
 import com.watchweb.app.domain.auth.dto.LoginRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.service.AuthService;
+import com.watchweb.app.domain.review.dto.CreateReviewRequest;
+import com.watchweb.app.domain.review.service.ReviewService;
 import com.watchweb.app.domain.user.entity.Role;
 import com.watchweb.app.domain.user.entity.User;
 import com.watchweb.app.domain.user.repository.UserRepository;
@@ -86,6 +88,9 @@ class AppApplicationTests {
 
     @Autowired
     private WatchCatalogService watchCatalogService;
+
+    @Autowired
+    private ReviewService reviewService;
 
     @Autowired
     private WatchSubmissionModerationService watchSubmissionModerationService;
@@ -291,6 +296,54 @@ class AppApplicationTests {
         assertThatThrownBy(() -> watchCatalogService.getById(id))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Watch not found: " + id);
+    }
+
+    @Test
+    void createsReviewAndUpdatesWatchRatingStats() {
+        var user = authService.register(new RegisterRequest("reviewauthor", "reviewauthor@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Sinn", "556");
+
+        var response = reviewService.create(watch.getId(), user.user().id(), new CreateReviewRequest(9, "Great everyday watch."));
+
+        assertThat(response.id()).isNotNull();
+        assertThat(response.watchId()).isEqualTo(watch.getId());
+        assertThat(response.reviewerId()).isEqualTo(user.user().id());
+        assertThat(response.rating()).isEqualTo(9);
+
+        var updatedWatch = watchRepository.findById(watch.getId()).orElseThrow();
+        assertThat(updatedWatch.getAverageRating()).isEqualByComparingTo("9.00");
+        assertThat(updatedWatch.getReviewsCount()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsDuplicateReviewForSameWatchBySameUser() {
+        var user = authService.register(new RegisterRequest("duplicatereview", "duplicatereview@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Doxa", "Sub 300");
+        reviewService.create(watch.getId(), user.user().id(), new CreateReviewRequest(8, "First review."));
+
+        assertThatThrownBy(() -> reviewService.create(watch.getId(), user.user().id(), new CreateReviewRequest(7, "Second review.")))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessage("User has already reviewed this watch.");
+    }
+
+    @Test
+    void listsReviewsForWatch() {
+        var firstUser = authService.register(new RegisterRequest("reviewlistone", "reviewlistone@example.com", "StrongPassword123"));
+        var secondUser = authService.register(new RegisterRequest("reviewlisttwo", "reviewlisttwo@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Oris", "Aquis");
+        var otherWatch = saveCatalogWatch("Oris", "Big Crown");
+        var expectedReview = reviewService.create(watch.getId(), firstUser.user().id(), new CreateReviewRequest(8, "Solid diver."));
+        reviewService.create(otherWatch.getId(), secondUser.user().id(), new CreateReviewRequest(6, "Different watch."));
+
+        var page = reviewService.listByWatch(watch.getId(), PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(review -> {
+                    assertThat(review.id()).isEqualTo(expectedReview.id());
+                    assertThat(review.watchId()).isEqualTo(watch.getId());
+                    assertThat(review.reviewerUsername()).isEqualTo("reviewlistone");
+                });
     }
 
     @Test

@@ -10,6 +10,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -39,6 +41,12 @@ public class Watch {
 
     @Embedded
     private WatchDetails details;
+
+    @Column(name = "average_rating", nullable = false, precision = 4, scale = 2)
+    private BigDecimal averageRating = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+    @Column(name = "reviews_count", nullable = false)
+    private int reviewsCount;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -98,12 +106,27 @@ public class Watch {
         return details;
     }
 
+    public BigDecimal getAverageRating() {
+        return averageRating;
+    }
+
+    public int getReviewsCount() {
+        return reviewsCount;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void addReviewRating(int rating) {
+        var totalRating = averageRating.multiply(BigDecimal.valueOf(reviewsCount))
+                .add(BigDecimal.valueOf(rating));
+        reviewsCount++;
+        averageRating = totalRating.divide(BigDecimal.valueOf(reviewsCount), 2, RoundingMode.HALF_UP);
     }
 
     @Override

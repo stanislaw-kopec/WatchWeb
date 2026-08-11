@@ -3,6 +3,7 @@ package com.watchweb.app.domain.watch.dto;
 import com.watchweb.app.domain.watch.entity.Watch;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,6 +14,8 @@ public record WatchResponse(
         String model,
         String referenceCode,
         WatchDetailsResponse details,
+        BigDecimal averageRating,
+        int reviewsCount,
         Instant createdAt
 ) {
 
@@ -23,6 +26,8 @@ public record WatchResponse(
                 watch.getModel(),
                 watch.getReferenceCode(),
                 WatchDetailsResponse.fromEntity(watch.getDetails()),
+                watch.getAverageRating(),
+                watch.getReviewsCount(),
                 watch.getCreatedAt()
         );
     }
