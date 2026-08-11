@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -41,6 +42,26 @@ public class GlobalExceptionHandler {
         var status = HttpStatus.UNAUTHORIZED;
         return ResponseEntity.status(status)
                 .body(ApiErrorResponse.of(status.value(), status.getReasonPhrase(), exception.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(InvalidOperationException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidOperation(
+            InvalidOperationException exception,
+            HttpServletRequest request
+    ) {
+        var status = HttpStatus.CONFLICT;
+        return ResponseEntity.status(status)
+                .body(ApiErrorResponse.of(status.value(), status.getReasonPhrase(), exception.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            AccessDeniedException exception,
+            HttpServletRequest request
+    ) {
+        var status = HttpStatus.FORBIDDEN;
+        return ResponseEntity.status(status)
+                .body(ApiErrorResponse.of(status.value(), status.getReasonPhrase(), "Access denied", request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

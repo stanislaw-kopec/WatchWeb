@@ -16,13 +16,17 @@ import com.watchweb.app.domain.watch.entity.WatchSubmissionStatus;
 import com.watchweb.app.domain.watch.repository.WatchRepository;
 import com.watchweb.app.domain.watch.repository.WatchSubmissionRepository;
 import com.watchweb.app.domain.watch.service.WatchNameNormalizer;
+import com.watchweb.app.domain.watch.service.WatchSubmissionModerationService;
 import com.watchweb.app.domain.watch.service.WatchSubmissionService;
 import com.watchweb.app.exception.DuplicateResourceException;
 import com.watchweb.app.exception.InvalidCredentialsException;
+import com.watchweb.app.exception.InvalidOperationException;
 import com.watchweb.app.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -75,6 +79,9 @@ class AppApplicationTests {
 
     @Autowired
     private WatchNameNormalizer watchNameNormalizer;
+
+    @Autowired
+    private WatchSubmissionModerationService watchSubmissionModerationService;
 
     @Test
     void contextLoads() {
@@ -195,6 +202,67 @@ class AppApplicationTests {
         assertThatThrownBy(() -> watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("casio", "f 91w")))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessage("Taki zegarek juz istnieje w katalogu.");
+    }
+
+    @Test
+    void approvesWatchSubmissionAndCreatesCatalogWatch() {
+        var user = authService.register(new RegisterRequest("approvesubmission", "approvesubmission@example.com", "StrongPassword123"));
+        var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Tissot", "PRX"));
+
+        var watch = watchSubmissionModerationService.approve(submission.id());
+
+        assertThat(watch.id()).isNotNull();
+        assertThat(watch.brand()).isEqualTo("Tissot");
+        assertThat(watch.model()).isEqualTo("PRX");
+        assertThat(watchRepository.existsByBrandNormalizedAndModelNormalized("tissot", "prx")).isTrue();
+        assertThat(watchSubmissionRepository.findById(submission.id()).orElseThrow().getStatus())
+                .isEqualTo(WatchSubmissionStatus.APPROVED);
+    }
+
+    @Test
+    void rejectsWatchSubmissionWithReason() {
+        var user = authService.register(new RegisterRequest("rejectsubmission", "rejectsubmission@example.com", "StrongPassword123"));
+        var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Citizen", "Tsuyosa"));
+
+        var response = watchSubmissionModerationService.reject(submission.id(), "Duplicate-like model");
+
+        assertThat(response.status()).isEqualTo(WatchSubmissionStatus.REJECTED);
+        assertThat(response.message()).isEqualTo("Zgloszenie zostalo odrzucone.");
+        var rejectedSubmission = watchSubmissionRepository.findById(submission.id()).orElseThrow();
+        assertThat(rejectedSubmission.getRejectionReason()).isEqualTo("Duplicate-like model");
+    }
+
+    @Test
+    void listsWatchSubmissionsForModerationByStatus() {
+        var user = authService.register(new RegisterRequest("listsubmissions", "listsubmissions@example.com", "StrongPassword123"));
+        var pendingSubmission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Longines", "Spirit"));
+        var rejectedSubmission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Certina", "DS Action"));
+        watchSubmissionModerationService.reject(rejectedSubmission.id(), "Missing reference details");
+
+        var page = watchSubmissionModerationService.list(
+                WatchSubmissionStatus.PENDING,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .allSatisfy(submission -> assertThat(submission.status()).isEqualTo(WatchSubmissionStatus.PENDING))
+                .anySatisfy(submission -> {
+                    assertThat(submission.id()).isEqualTo(pendingSubmission.id());
+                    assertThat(submission.submittedById()).isEqualTo(user.user().id());
+                    assertThat(submission.submittedByUsername()).isEqualTo("listsubmissions");
+                })
+                .noneSatisfy(submission -> assertThat(submission.id()).isEqualTo(rejectedSubmission.id()));
+    }
+
+    @Test
+    void rejectsModerationOfAlreadyReviewedSubmission() {
+        var user = authService.register(new RegisterRequest("reviewedsubmission", "reviewedsubmission@example.com", "StrongPassword123"));
+        var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Hamilton", "Khaki Field"));
+        watchSubmissionModerationService.reject(submission.id(), "Not enough data");
+
+        assertThatThrownBy(() -> watchSubmissionModerationService.approve(submission.id()))
+                .isInstanceOf(InvalidOperationException.class)
+                .hasMessage("Watch submission is not pending: " + submission.id());
     }
 
     private CreateWatchSubmissionRequest createWatchSubmissionRequest(String brand, String model) {

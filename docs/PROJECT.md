@@ -167,6 +167,7 @@ Zasady:
 * `ROLE_MODERATOR` lub `ROLE_ADMIN` moze zaakceptowac albo odrzucic zgloszenie,
 * po akceptacji powstaje rekord w katalogu `watches`,
 * po odrzuceniu zgloszenie przechowuje powod odrzucenia,
+* zaakceptowanego albo odrzuconego zgloszenia nie mozna moderowac ponownie,
 * zatwierdzone zegarki musza miec unikalne polaczenie znormalizowanej marki i modelu,
 * system nie powinien tworzyc zgloszenia, jesli taki zegarek juz istnieje w katalogu,
 * system nie powinien tworzyc drugiego zgloszenia, jesli istnieje juz aktywne zgloszenie `PENDING` dla tej samej marki i modelu.

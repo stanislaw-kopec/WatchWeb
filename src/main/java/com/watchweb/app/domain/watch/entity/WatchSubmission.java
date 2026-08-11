@@ -145,6 +145,20 @@ public class WatchSubmission {
         return updatedAt;
     }
 
+    public void approve() {
+        status = WatchSubmissionStatus.APPROVED;
+        rejectionReason = null;
+    }
+
+    public void reject(String reason) {
+        status = WatchSubmissionStatus.REJECTED;
+        rejectionReason = reason;
+    }
+
+    public boolean isPending() {
+        return status == WatchSubmissionStatus.PENDING;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
