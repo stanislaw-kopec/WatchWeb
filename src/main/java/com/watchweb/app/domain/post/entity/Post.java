@@ -114,6 +114,13 @@ public class Post {
         rejectionReason = reason;
     }
 
+    public void updateByAuthor(String title, String content) {
+        this.title = title;
+        this.content = content;
+        status = PostStatus.PENDING;
+        rejectionReason = null;
+    }
+
     public boolean isPending() {
         return status == PostStatus.PENDING;
     }

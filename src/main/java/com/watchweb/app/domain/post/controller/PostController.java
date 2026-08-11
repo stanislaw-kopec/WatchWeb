@@ -2,6 +2,7 @@ package com.watchweb.app.domain.post.controller;
 
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.PostResponse;
+import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.exception.ApiErrorResponse;
 import com.watchweb.app.security.UserPrincipal;
@@ -24,6 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -104,5 +106,47 @@ public class PostController {
             @Valid @RequestBody CreatePostRequest request
     ) {
         return postService.create(principal.getId(), request);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Update own post",
+            description = "Updates the authenticated user's post and sends it back to pending moderation."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Post updated as pending",
+                    content = @Content(schema = @Schema(implementation = PostResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Post belongs to another user",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Post not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public PostResponse update(
+            @Parameter(description = "Post identifier", required = true)
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody UpdatePostRequest request
+    ) {
+        return postService.update(id, principal.getId(), request);
     }
 }

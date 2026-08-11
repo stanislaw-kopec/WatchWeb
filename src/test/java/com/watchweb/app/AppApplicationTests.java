@@ -7,6 +7,7 @@ import com.watchweb.app.domain.auth.service.AuthService;
 import com.watchweb.app.domain.comment.dto.CreateWatchCommentRequest;
 import com.watchweb.app.domain.comment.service.WatchCommentService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
+import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.repository.PostRepository;
 import com.watchweb.app.domain.post.service.PostModerationService;
@@ -670,6 +671,73 @@ class AppApplicationTests {
         assertThatThrownBy(() -> postModerationService.reject(post.id(), "Too late"))
                 .isInstanceOf(InvalidOperationException.class)
                 .hasMessage("Post is not pending: " + post.id());
+    }
+
+    @Test
+    void updatesOwnPendingPostAndKeepsItPending() {
+        var user = authService.register(new RegisterRequest("postupdatepending", "postupdatepending@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Original pending", "Original content."));
+
+        var response = postService.update(
+                post.id(),
+                user.user().id(),
+                new UpdatePostRequest("Updated pending", "Updated content.")
+        );
+
+        assertThat(response.title()).isEqualTo("Updated pending");
+        assertThat(response.content()).isEqualTo("Updated content.");
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThat(response.rejectionReason()).isNull();
+    }
+
+    @Test
+    void updatesRejectedPostBackToPendingModeration() {
+        var user = authService.register(new RegisterRequest("postupdaterejected", "postupdaterejected@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Rejected original", "Needs work."));
+        postModerationService.reject(post.id(), "Please add more details");
+
+        var response = postService.update(
+                post.id(),
+                user.user().id(),
+                new UpdatePostRequest("Rejected updated", "Now it has more details.")
+        );
+
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThat(response.rejectionReason()).isNull();
+        assertThat(response.title()).isEqualTo("Rejected updated");
+    }
+
+    @Test
+    void updatesApprovedPostBackToPendingModeration() {
+        var user = authService.register(new RegisterRequest("postupdateapproved", "postupdateapproved@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Approved original", "Visible content."));
+        postModerationService.approve(post.id());
+
+        var response = postService.update(
+                post.id(),
+                user.user().id(),
+                new UpdatePostRequest("Approved updated", "Changed after approval.")
+        );
+
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThatThrownBy(() -> postService.getApprovedById(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
+    }
+
+    @Test
+    void rejectsUpdatingPostOwnedByAnotherUser() {
+        var owner = authService.register(new RegisterRequest("postowner", "postowner@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("postintruder", "postintruder@example.com", "StrongPassword123"));
+        var post = postService.create(owner.user().id(), new CreatePostRequest("Owner post", "Only owner can edit this."));
+
+        assertThatThrownBy(() -> postService.update(
+                post.id(),
+                otherUser.user().id(),
+                new UpdatePostRequest("Intruder update", "This should not be accepted.")
+        ))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Post belongs to another user");
     }
 
     @Test
