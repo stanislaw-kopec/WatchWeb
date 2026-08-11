@@ -177,6 +177,12 @@ public class ReviewController {
             @PathVariable UUID reviewId,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        reviewService.delete(watchId, reviewId, principal.getId());
+        reviewService.delete(watchId, reviewId, principal.getId(), canDeleteAnyReview(principal));
+    }
+
+    private boolean canDeleteAnyReview(UserPrincipal principal) {
+        return principal.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_MODERATOR")
+                        || authority.getAuthority().equals("ROLE_ADMIN"));
     }
 }

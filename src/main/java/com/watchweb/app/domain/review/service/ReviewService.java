@@ -65,9 +65,9 @@ public class ReviewService {
     }
 
     @Transactional
-    public void delete(UUID watchId, UUID reviewId, UUID reviewerId) {
+    public void delete(UUID watchId, UUID reviewId, UUID reviewerId, boolean canDeleteAnyReview) {
         var review = findReviewForWatch(watchId, reviewId);
-        ensureOwner(review, reviewerId);
+        ensureOwnerOrModerator(review, reviewerId, canDeleteAnyReview);
 
         review.getWatch().removeReviewRating(review.getRating());
         reviewRepository.delete(review);
@@ -91,6 +91,12 @@ public class ReviewService {
     private void ensureOwner(Review review, UUID reviewerId) {
         if (!review.getReviewer().getId().equals(reviewerId)) {
             throw new AccessDeniedException("Review belongs to another user");
+        }
+    }
+
+    private void ensureOwnerOrModerator(Review review, UUID reviewerId, boolean canDeleteAnyReview) {
+        if (!canDeleteAnyReview) {
+            ensureOwner(review, reviewerId);
         }
     }
 }

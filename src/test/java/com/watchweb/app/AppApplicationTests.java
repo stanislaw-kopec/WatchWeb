@@ -378,7 +378,7 @@ class AppApplicationTests {
         var review = reviewService.create(watch.getId(), firstUser.user().id(), new CreateReviewRequest(6, "Good."));
         reviewService.create(watch.getId(), secondUser.user().id(), new CreateReviewRequest(10, "Great."));
 
-        reviewService.delete(watch.getId(), review.id(), firstUser.user().id());
+        reviewService.delete(watch.getId(), review.id(), firstUser.user().id(), false);
 
         var updatedWatch = watchRepository.findById(watch.getId()).orElseThrow();
         assertThat(updatedWatch.getAverageRating()).isEqualByComparingTo("10.00");
@@ -403,6 +403,38 @@ class AppApplicationTests {
         ))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Review belongs to another user");
+    }
+
+    @Test
+    void rejectsDeletingReviewOwnedByAnotherUserWithoutModeratorRole() {
+        var owner = authService.register(new RegisterRequest("reviewdeleteowner", "reviewdeleteowner@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("reviewdeleteintruder", "reviewdeleteintruder@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Rado", "Captain Cook");
+        var review = reviewService.create(watch.getId(), owner.user().id(), new CreateReviewRequest(8, "Distinctive case design."));
+
+        assertThatThrownBy(() -> reviewService.delete(watch.getId(), review.id(), otherUser.user().id(), false))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Review belongs to another user");
+    }
+
+    @Test
+    void moderatorCanDeleteReviewOwnedByAnotherUser() {
+        var owner = authService.register(new RegisterRequest("moderatedreviewowner", "moderatedreviewowner@example.com", "StrongPassword123"));
+        var moderator = userRepository.saveAndFlush(new User(
+                "reviewmoderator",
+                "reviewmoderator@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_MODERATOR
+        ));
+        var watch = saveCatalogWatch("Zenith", "Chronomaster");
+        var review = reviewService.create(watch.getId(), owner.user().id(), new CreateReviewRequest(5, "Needs moderation."));
+
+        reviewService.delete(watch.getId(), review.id(), moderator.getId(), true);
+
+        var updatedWatch = watchRepository.findById(watch.getId()).orElseThrow();
+        assertThat(updatedWatch.getAverageRating()).isEqualByComparingTo("0.00");
+        assertThat(updatedWatch.getReviewsCount()).isZero();
+        assertThat(reviewService.listByWatch(watch.getId(), PageRequest.of(0, 10)).getContent()).isEmpty();
     }
 
     @Test
