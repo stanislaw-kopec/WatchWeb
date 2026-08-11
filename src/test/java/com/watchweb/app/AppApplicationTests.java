@@ -16,11 +16,13 @@ import com.watchweb.app.domain.watch.entity.WatchSubmissionStatus;
 import com.watchweb.app.domain.watch.repository.WatchRepository;
 import com.watchweb.app.domain.watch.repository.WatchSubmissionRepository;
 import com.watchweb.app.domain.watch.service.WatchNameNormalizer;
+import com.watchweb.app.domain.watch.service.WatchCatalogService;
 import com.watchweb.app.domain.watch.service.WatchSubmissionModerationService;
 import com.watchweb.app.domain.watch.service.WatchSubmissionService;
 import com.watchweb.app.exception.DuplicateResourceException;
 import com.watchweb.app.exception.InvalidCredentialsException;
 import com.watchweb.app.exception.InvalidOperationException;
+import com.watchweb.app.exception.ResourceNotFoundException;
 import com.watchweb.app.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -79,6 +82,9 @@ class AppApplicationTests {
 
     @Autowired
     private WatchNameNormalizer watchNameNormalizer;
+
+    @Autowired
+    private WatchCatalogService watchCatalogService;
 
     @Autowired
     private WatchSubmissionModerationService watchSubmissionModerationService;
@@ -205,6 +211,40 @@ class AppApplicationTests {
     }
 
     @Test
+    void listsCatalogWatches() {
+        var savedWatch = saveCatalogWatch("Omega", "Speedmaster");
+
+        var page = watchCatalogService.list(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        assertThat(page.getContent())
+                .anySatisfy(watch -> {
+                    assertThat(watch.id()).isEqualTo(savedWatch.getId());
+                    assertThat(watch.brand()).isEqualTo("Omega");
+                    assertThat(watch.model()).isEqualTo("Speedmaster");
+                });
+    }
+
+    @Test
+    void returnsCatalogWatchById() {
+        var savedWatch = saveCatalogWatch("Nomos", "Tangente");
+
+        var response = watchCatalogService.getById(savedWatch.getId());
+
+        assertThat(response.id()).isEqualTo(savedWatch.getId());
+        assertThat(response.brand()).isEqualTo("Nomos");
+        assertThat(response.model()).isEqualTo("Tangente");
+    }
+
+    @Test
+    void rejectsUnknownCatalogWatchId() {
+        var id = UUID.randomUUID();
+
+        assertThatThrownBy(() -> watchCatalogService.getById(id))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Watch not found: " + id);
+    }
+
+    @Test
     void approvesWatchSubmissionAndCreatesCatalogWatch() {
         var user = authService.register(new RegisterRequest("approvesubmission", "approvesubmission@example.com", "StrongPassword123"));
         var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Tissot", "PRX"));
@@ -282,5 +322,16 @@ class AppApplicationTests {
                         "Stainless steel"
                 )
         );
+    }
+
+    private Watch saveCatalogWatch(String brand, String model) {
+        return watchRepository.saveAndFlush(new Watch(
+                brand,
+                model,
+                model + "-REF",
+                watchNameNormalizer.normalize(brand),
+                watchNameNormalizer.normalize(model),
+                new WatchDetails(MovementType.AUTOMATIC, null, null, null, null, null, 100, "Sapphire", "Stainless steel")
+        ));
     }
 }
