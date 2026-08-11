@@ -1,5 +1,9 @@
 package com.watchweb.app;
 
+import com.watchweb.app.domain.article.dto.CreateArticleRequest;
+import com.watchweb.app.domain.article.dto.UpdateArticleRequest;
+import com.watchweb.app.domain.article.repository.ArticleRepository;
+import com.watchweb.app.domain.article.service.ArticleService;
 import com.watchweb.app.domain.auth.dto.RegisterRequest;
 import com.watchweb.app.domain.auth.dto.LoginRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
@@ -122,6 +126,12 @@ class AppApplicationTests {
 
     @Autowired
     private WatchSubmissionModerationService watchSubmissionModerationService;
+
+    @Autowired
+    private ArticleService articleService;
+
+    @Autowired
+    private ArticleRepository articleRepository;
 
     @Test
     void contextLoads() {
@@ -960,6 +970,152 @@ class AppApplicationTests {
         assertThatThrownBy(() -> postCommentService.delete(post.id(), comment.id(), otherUser.user().id(), false))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Comment belongs to another user");
+    }
+
+    @Test
+    void journalistCreatesArticle() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articlejournalist",
+                "articlejournalist@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+
+        var response = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Microbrand guide", "Microbrands changed the way collectors discover new watches.")
+        );
+
+        assertThat(response.id()).isNotNull();
+        assertThat(response.authorId()).isEqualTo(journalist.getId());
+        assertThat(response.title()).isEqualTo("Microbrand guide");
+        assertThat(articleRepository.findById(response.id()).orElseThrow().getDeletedAt()).isNull();
+    }
+
+    @Test
+    void listsAndReturnsArticleById() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articlelistjournalist",
+                "articlelistjournalist@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Public article", "This article should be visible.")
+        );
+
+        var page = articleService.list(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+        var details = articleService.getById(article.id());
+
+        assertThat(page.getContent())
+                .anySatisfy(response -> assertThat(response.id()).isEqualTo(article.id()));
+        assertThat(details.title()).isEqualTo("Public article");
+    }
+
+    @Test
+    void authorUpdatesOwnArticle() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articleupdateauthor",
+                "articleupdateauthor@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Original article", "Original content.")
+        );
+
+        var response = articleService.update(
+                article.id(),
+                journalist.getId(),
+                false,
+                new UpdateArticleRequest("Updated article", "Updated content.")
+        );
+
+        assertThat(response.title()).isEqualTo("Updated article");
+        assertThat(response.content()).isEqualTo("Updated content.");
+    }
+
+    @Test
+    void rejectsUpdatingArticleOwnedByAnotherJournalist() {
+        var owner = userRepository.saveAndFlush(new User(
+                "articleowner",
+                "articleowner@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var otherJournalist = userRepository.saveAndFlush(new User(
+                "articleother",
+                "articleother@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var article = articleService.create(
+                owner.getId(),
+                new CreateArticleRequest("Owner article", "Only owner can update this.")
+        );
+
+        assertThatThrownBy(() -> articleService.update(
+                article.id(),
+                otherJournalist.getId(),
+                false,
+                new UpdateArticleRequest("Intruder title", "Intruder content.")
+        ))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Article belongs to another user");
+    }
+
+    @Test
+    void adminUpdatesArticleOwnedByJournalist() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articleadminowner",
+                "articleadminowner@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var admin = userRepository.saveAndFlush(new User(
+                "articleadmin",
+                "articleadmin@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_ADMIN
+        ));
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Admin editable", "Admin can update this.")
+        );
+
+        var response = articleService.update(
+                article.id(),
+                admin.getId(),
+                true,
+                new UpdateArticleRequest("Admin updated", "Updated by admin.")
+        );
+
+        assertThat(response.title()).isEqualTo("Admin updated");
+    }
+
+    @Test
+    void softDeletesArticleAndHidesItFromPublicReads() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articledeleteauthor",
+                "articledeleteauthor@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Deleted article", "This should be hidden.")
+        );
+
+        articleService.delete(article.id(), journalist.getId(), false);
+
+        assertThat(articleRepository.findById(article.id()).orElseThrow().getDeletedAt()).isNotNull();
+        assertThatThrownBy(() -> articleService.getById(article.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Article not found: " + article.id());
+        assertThat(articleService.list(PageRequest.of(0, 20)).getContent())
+                .noneSatisfy(response -> assertThat(response.id()).isEqualTo(article.id()));
     }
 
     @Test
