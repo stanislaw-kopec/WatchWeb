@@ -114,6 +114,10 @@ public class Post {
         rejectionReason = reason;
     }
 
+    public boolean isPending() {
+        return status == PostStatus.PENDING;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

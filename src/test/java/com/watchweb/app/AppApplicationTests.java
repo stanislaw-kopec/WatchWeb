@@ -9,6 +9,7 @@ import com.watchweb.app.domain.comment.service.WatchCommentService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.repository.PostRepository;
+import com.watchweb.app.domain.post.service.PostModerationService;
 import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
@@ -105,6 +106,9 @@ class AppApplicationTests {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private PostModerationService postModerationService;
 
     @Autowired
     private PostRepository postRepository;
@@ -611,6 +615,61 @@ class AppApplicationTests {
         assertThatThrownBy(() -> postService.getApprovedById(post.id()))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Post not found: " + post.id());
+    }
+
+    @Test
+    void listsPostsForModerationByStatus() {
+        var user = authService.register(new RegisterRequest("postmoderationlist", "postmoderationlist@example.com", "StrongPassword123"));
+        var pendingPost = postService.create(user.user().id(), new CreatePostRequest("Needs review", "Please review this post."));
+        var approvedPost = postService.create(user.user().id(), new CreatePostRequest("Already approved", "This one is already approved."));
+        postModerationService.approve(approvedPost.id());
+
+        var page = postModerationService.list(
+                PostStatus.PENDING,
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .allSatisfy(post -> assertThat(post.status()).isEqualTo(PostStatus.PENDING))
+                .anySatisfy(post -> assertThat(post.id()).isEqualTo(pendingPost.id()))
+                .noneSatisfy(post -> assertThat(post.id()).isEqualTo(approvedPost.id()));
+    }
+
+    @Test
+    void approvesPostAndMakesItPublic() {
+        var user = authService.register(new RegisterRequest("postapprove", "postapprove@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Approve me", "This post should become public."));
+
+        var response = postModerationService.approve(post.id());
+
+        assertThat(response.status()).isEqualTo(PostStatus.APPROVED);
+        assertThat(response.rejectionReason()).isNull();
+        assertThat(postService.getApprovedById(post.id()).id()).isEqualTo(post.id());
+    }
+
+    @Test
+    void rejectsPostWithReason() {
+        var user = authService.register(new RegisterRequest("postreject", "postreject@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Reject me", "This post needs changes."));
+
+        var response = postModerationService.reject(post.id(), "Please add more details");
+
+        assertThat(response.status()).isEqualTo(PostStatus.REJECTED);
+        assertThat(response.rejectionReason()).isEqualTo("Please add more details");
+        assertThatThrownBy(() -> postService.getApprovedById(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
+    }
+
+    @Test
+    void rejectsModerationOfAlreadyReviewedPost() {
+        var user = authService.register(new RegisterRequest("postalreadymoderated", "postalreadymoderated@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Reviewed post", "This post will be reviewed once."));
+        postModerationService.approve(post.id());
+
+        assertThatThrownBy(() -> postModerationService.reject(post.id(), "Too late"))
+                .isInstanceOf(InvalidOperationException.class)
+                .hasMessage("Post is not pending: " + post.id());
     }
 
     @Test

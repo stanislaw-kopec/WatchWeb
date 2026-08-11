@@ -13,6 +13,9 @@ import java.util.UUID;
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @EntityGraph(attributePaths = "author")
+    Page<Post> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = "author")
     Page<Post> findByStatus(PostStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
