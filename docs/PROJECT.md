@@ -92,7 +92,8 @@ Role:
 
 | Rola | Uprawnienia |
 | --- | --- |
-| `ROLE_USER` | profil, posty, komentarze, recenzje |
+| `ROLE_USER` | profil, posty, komentarze, recenzje, zglaszanie zegarkow do katalogu |
+| `ROLE_MODERATOR` | uprawnienia uzytkownika oraz moderacja postow i zgloszen zegarkow |
 | `ROLE_JOURNALIST` | uprawnienia uzytkownika oraz artykuly publikowane bez moderacji |
 | `ROLE_ADMIN` | moderacja, zarzadzanie trescia i uzytkownikami |
 
@@ -156,6 +157,19 @@ Filtrowanie:
 * minimalna wodoszczelnosc.
 
 Wyszukiwanie i listowanie katalogu powinno uzywac paginacji. Dynamiczne filtrowanie powinno byc oparte o JPA Specifications.
+
+Dodawanie nowych modeli zegarkow do katalogu powinno byc moderowane.
+
+Zasady:
+
+* zwykly uzytkownik moze utworzyc zgloszenie zegarka, ale nie dodaje go bezposrednio do katalogu,
+* zgloszenie startuje ze statusem `PENDING`,
+* `ROLE_MODERATOR` lub `ROLE_ADMIN` moze zaakceptowac albo odrzucic zgloszenie,
+* po akceptacji powstaje rekord w katalogu `watches`,
+* po odrzuceniu zgloszenie przechowuje powod odrzucenia,
+* zatwierdzone zegarki musza miec unikalne polaczenie znormalizowanej marki i modelu,
+* system nie powinien tworzyc zgloszenia, jesli taki zegarek juz istnieje w katalogu,
+* system nie powinien tworzyc drugiego zgloszenia, jesli istnieje juz aktywne zgloszenie `PENDING` dla tej samej marki i modelu.
 
 ### 4.5 Recenzje
 

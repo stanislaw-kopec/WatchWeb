@@ -101,6 +101,7 @@ Token lifetime:
 Use role-based authorization:
 
 * `ROLE_USER`
+* `ROLE_MODERATOR`
 * `ROLE_JOURNALIST`
 * `ROLE_ADMIN`
 
@@ -127,6 +128,14 @@ Has USER permissions and can:
 
 * create industry articles,
 * publish articles without moderation.
+
+### ROLE_MODERATOR
+
+Has USER permissions and can:
+
+* moderate posts,
+* review watch catalog submissions,
+* approve/reject watch submissions.
 
 ### ROLE_ADMIN
 
@@ -172,6 +181,19 @@ Supported filtering includes:
 Use JPA Specifications for dynamic filtering.
 
 Use pagination for catalog queries.
+
+New watches submitted by regular users must go through moderation.
+
+Rules:
+
+* regular users create watch submissions, not catalog records directly,
+* submissions start as `PENDING`,
+* only `ROLE_MODERATOR` and `ROLE_ADMIN` can approve/reject submissions,
+* approved submissions create records in the watch catalog,
+* rejected submissions contain `rejectionReason`,
+* approved catalog watches must be unique by normalized brand + model,
+* do not create a submission when the watch already exists in the catalog,
+* do not create a duplicate `PENDING` submission for the same normalized brand + model.
 
 ## Reviews
 
