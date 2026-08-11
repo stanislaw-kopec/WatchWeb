@@ -56,6 +56,17 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    public Page<PostResponse> listMine(UUID authorId, PostStatus status, Pageable pageable) {
+        if (status == null) {
+            return postRepository.findByAuthorId(authorId, pageable)
+                    .map(PostResponse::fromEntity);
+        }
+
+        return postRepository.findByAuthorIdAndStatus(authorId, status, pageable)
+                .map(PostResponse::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
     public PostResponse getApprovedById(UUID id) {
         return postRepository.findByIdAndStatus(id, PostStatus.APPROVED)
                 .map(PostResponse::fromEntity)

@@ -3,6 +3,7 @@ package com.watchweb.app.domain.post.controller;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.PostResponse;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
+import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.exception.ApiErrorResponse;
 import com.watchweb.app.security.UserPrincipal;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -57,6 +59,33 @@ public class PostController {
             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return postService.listApproved(pageable);
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "List my posts",
+            description = "Returns the authenticated user's posts, including pending and rejected posts."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Posts returned",
+                    content = @Content(schema = @Schema(implementation = PostResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public Page<PostResponse> listMine(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Parameter(description = "Optional status filter", example = "REJECTED")
+            @RequestParam(required = false) PostStatus status,
+            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return postService.listMine(principal.getId(), status, pageable);
     }
 
     @GetMapping("/{id}")

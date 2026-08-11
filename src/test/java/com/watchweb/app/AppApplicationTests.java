@@ -741,6 +741,53 @@ class AppApplicationTests {
     }
 
     @Test
+    void listsOwnPostsWithAllStatuses() {
+        var user = authService.register(new RegisterRequest("postmine", "postmine@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("postmineother", "postmineother@example.com", "StrongPassword123"));
+        var pendingPost = postService.create(user.user().id(), new CreatePostRequest("My pending", "Waiting."));
+        var rejectedPost = postService.create(user.user().id(), new CreatePostRequest("My rejected", "Needs changes."));
+        var approvedPost = postService.create(user.user().id(), new CreatePostRequest("My approved", "Visible."));
+        var otherPost = postService.create(otherUser.user().id(), new CreatePostRequest("Other pending", "Not mine."));
+        postModerationService.reject(rejectedPost.id(), "Please expand it");
+        postModerationService.approve(approvedPost.id());
+
+        var page = postService.listMine(
+                user.user().id(),
+                null,
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .extracting(post -> post.id())
+                .contains(pendingPost.id(), rejectedPost.id(), approvedPost.id())
+                .doesNotContain(otherPost.id());
+    }
+
+    @Test
+    void filtersOwnPostsByStatus() {
+        var user = authService.register(new RegisterRequest("postminefilter", "postminefilter@example.com", "StrongPassword123"));
+        var pendingPost = postService.create(user.user().id(), new CreatePostRequest("Filter pending", "Waiting."));
+        var rejectedPost = postService.create(user.user().id(), new CreatePostRequest("Filter rejected", "Needs changes."));
+        postModerationService.reject(rejectedPost.id(), "Please expand it");
+
+        var page = postService.listMine(
+                user.user().id(),
+                PostStatus.REJECTED,
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(post -> {
+                    assertThat(post.id()).isEqualTo(rejectedPost.id());
+                    assertThat(post.status()).isEqualTo(PostStatus.REJECTED);
+                    assertThat(post.rejectionReason()).isEqualTo("Please expand it");
+                });
+        assertThat(page.getContent())
+                .noneSatisfy(post -> assertThat(post.id()).isEqualTo(pendingPost.id()));
+    }
+
+    @Test
     void approvesWatchSubmissionAndCreatesCatalogWatch() {
         var user = authService.register(new RegisterRequest("approvesubmission", "approvesubmission@example.com", "StrongPassword123"));
         var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Tissot", "PRX"));
