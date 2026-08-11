@@ -19,6 +19,7 @@ import com.watchweb.app.domain.watch.service.WatchNameNormalizer;
 import com.watchweb.app.domain.watch.service.WatchCatalogService;
 import com.watchweb.app.domain.watch.service.WatchSubmissionModerationService;
 import com.watchweb.app.domain.watch.service.WatchSubmissionService;
+import com.watchweb.app.exception.BadRequestException;
 import com.watchweb.app.exception.DuplicateResourceException;
 import com.watchweb.app.exception.InvalidCredentialsException;
 import com.watchweb.app.exception.InvalidOperationException;
@@ -214,7 +215,14 @@ class AppApplicationTests {
     void listsCatalogWatches() {
         var savedWatch = saveCatalogWatch("Omega", "Speedmaster");
 
-        var page = watchCatalogService.list(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
+        var page = watchCatalogService.list(
+                null,
+                null,
+                null,
+                null,
+                null,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
 
         assertThat(page.getContent())
                 .anySatisfy(watch -> {
@@ -222,6 +230,47 @@ class AppApplicationTests {
                     assertThat(watch.brand()).isEqualTo("Omega");
                     assertThat(watch.model()).isEqualTo("Speedmaster");
                 });
+    }
+
+    @Test
+    void filtersCatalogWatches() {
+        var matchingWatch = saveCatalogWatch(
+                "Seiko",
+                "Prospex",
+                MovementType.AUTOMATIC,
+                BigDecimal.valueOf(40.50),
+                200
+        );
+        saveCatalogWatch("Seiko", "Quartz Diver", MovementType.QUARTZ, BigDecimal.valueOf(40.00), 200);
+        saveCatalogWatch("Omega", "Seamaster", MovementType.AUTOMATIC, BigDecimal.valueOf(42.00), 300);
+        saveCatalogWatch("Seiko", "Small Automatic", MovementType.AUTOMATIC, BigDecimal.valueOf(36.00), 100);
+
+        var page = watchCatalogService.list(
+                "seiko",
+                MovementType.AUTOMATIC,
+                BigDecimal.valueOf(39.00),
+                BigDecimal.valueOf(41.00),
+                150,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(watch -> assertThat(watch.id()).isEqualTo(matchingWatch.getId()));
+    }
+
+    @Test
+    void rejectsInvalidCatalogDiameterRange() {
+        assertThatThrownBy(() -> watchCatalogService.list(
+                null,
+                null,
+                BigDecimal.valueOf(42.00),
+                BigDecimal.valueOf(38.00),
+                null,
+                PageRequest.of(0, 10)
+        ))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Minimum case diameter cannot be greater than maximum case diameter");
     }
 
     @Test
@@ -325,13 +374,23 @@ class AppApplicationTests {
     }
 
     private Watch saveCatalogWatch(String brand, String model) {
+        return saveCatalogWatch(brand, model, MovementType.AUTOMATIC, null, 100);
+    }
+
+    private Watch saveCatalogWatch(
+            String brand,
+            String model,
+            MovementType movementType,
+            BigDecimal caseDiameterMm,
+            Integer waterResistanceM
+    ) {
         return watchRepository.saveAndFlush(new Watch(
                 brand,
                 model,
                 model + "-REF",
                 watchNameNormalizer.normalize(brand),
                 watchNameNormalizer.normalize(model),
-                new WatchDetails(MovementType.AUTOMATIC, null, null, null, null, null, 100, "Sapphire", "Stainless steel")
+                new WatchDetails(movementType, null, caseDiameterMm, null, null, null, waterResistanceM, "Sapphire", "Stainless steel")
         ));
     }
 }
