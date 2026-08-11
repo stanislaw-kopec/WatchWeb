@@ -129,6 +129,26 @@ public class Watch {
         averageRating = totalRating.divide(BigDecimal.valueOf(reviewsCount), 2, RoundingMode.HALF_UP);
     }
 
+    public void updateReviewRating(int oldRating, int newRating) {
+        var totalRating = averageRating.multiply(BigDecimal.valueOf(reviewsCount))
+                .subtract(BigDecimal.valueOf(oldRating))
+                .add(BigDecimal.valueOf(newRating));
+        averageRating = totalRating.divide(BigDecimal.valueOf(reviewsCount), 2, RoundingMode.HALF_UP);
+    }
+
+    public void removeReviewRating(int rating) {
+        if (reviewsCount <= 1) {
+            reviewsCount = 0;
+            averageRating = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            return;
+        }
+
+        var totalRating = averageRating.multiply(BigDecimal.valueOf(reviewsCount))
+                .subtract(BigDecimal.valueOf(rating));
+        reviewsCount--;
+        averageRating = totalRating.divide(BigDecimal.valueOf(reviewsCount), 2, RoundingMode.HALF_UP);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

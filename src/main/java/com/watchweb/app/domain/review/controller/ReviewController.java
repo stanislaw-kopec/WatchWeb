@@ -2,6 +2,7 @@ package com.watchweb.app.domain.review.controller;
 
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.ReviewResponse;
+import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
 import com.watchweb.app.domain.review.service.ReviewService;
 import com.watchweb.app.exception.ApiErrorResponse;
 import com.watchweb.app.security.UserPrincipal;
@@ -24,6 +25,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -102,5 +105,78 @@ public class ReviewController {
             @Valid @RequestBody CreateReviewRequest request
     ) {
         return reviewService.create(watchId, principal.getId(), request);
+    }
+
+    @PutMapping("/{reviewId}")
+    @Operation(summary = "Update watch review", description = "Updates the authenticated user's review for a watch.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Review updated",
+                    content = @Content(schema = @Schema(implementation = ReviewResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Review belongs to another user",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Review not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public ReviewResponse update(
+            @Parameter(description = "Watch identifier", required = true)
+            @PathVariable UUID watchId,
+            @Parameter(description = "Review identifier", required = true)
+            @PathVariable UUID reviewId,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody UpdateReviewRequest request
+    ) {
+        return reviewService.update(watchId, reviewId, principal.getId(), request);
+    }
+
+    @DeleteMapping("/{reviewId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete watch review", description = "Deletes the authenticated user's review for a watch.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Review deleted"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Review belongs to another user",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Review not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public void delete(
+            @Parameter(description = "Watch identifier", required = true)
+            @PathVariable UUID watchId,
+            @Parameter(description = "Review identifier", required = true)
+            @PathVariable UUID reviewId,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        reviewService.delete(watchId, reviewId, principal.getId());
     }
 }

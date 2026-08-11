@@ -96,6 +96,11 @@ public class Review {
         return updatedAt;
     }
 
+    public void update(int rating, String content) {
+        this.rating = rating;
+        this.content = content;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

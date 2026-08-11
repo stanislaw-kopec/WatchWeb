@@ -5,6 +5,7 @@ import com.watchweb.app.domain.auth.dto.LoginRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.service.AuthService;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
+import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
 import com.watchweb.app.domain.review.service.ReviewService;
 import com.watchweb.app.domain.user.entity.Role;
 import com.watchweb.app.domain.user.entity.User;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -344,6 +346,63 @@ class AppApplicationTests {
                     assertThat(review.watchId()).isEqualTo(watch.getId());
                     assertThat(review.reviewerUsername()).isEqualTo("reviewlistone");
                 });
+    }
+
+    @Test
+    void updatesReviewAndRecalculatesWatchRatingStats() {
+        var firstUser = authService.register(new RegisterRequest("updatereviewone", "updatereviewone@example.com", "StrongPassword123"));
+        var secondUser = authService.register(new RegisterRequest("updatereviewtwo", "updatereviewtwo@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Mido", "Ocean Star");
+        var review = reviewService.create(watch.getId(), firstUser.user().id(), new CreateReviewRequest(6, "Good watch."));
+        reviewService.create(watch.getId(), secondUser.user().id(), new CreateReviewRequest(10, "Excellent watch."));
+
+        var response = reviewService.update(
+                watch.getId(),
+                review.id(),
+                firstUser.user().id(),
+                new UpdateReviewRequest(8, "Better after more wrist time.")
+        );
+
+        assertThat(response.rating()).isEqualTo(8);
+        assertThat(response.content()).isEqualTo("Better after more wrist time.");
+        var updatedWatch = watchRepository.findById(watch.getId()).orElseThrow();
+        assertThat(updatedWatch.getAverageRating()).isEqualByComparingTo("9.00");
+        assertThat(updatedWatch.getReviewsCount()).isEqualTo(2);
+    }
+
+    @Test
+    void deletesReviewAndRecalculatesWatchRatingStats() {
+        var firstUser = authService.register(new RegisterRequest("deletereviewone", "deletereviewone@example.com", "StrongPassword123"));
+        var secondUser = authService.register(new RegisterRequest("deletereviewtwo", "deletereviewtwo@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Tudor", "Black Bay");
+        var review = reviewService.create(watch.getId(), firstUser.user().id(), new CreateReviewRequest(6, "Good."));
+        reviewService.create(watch.getId(), secondUser.user().id(), new CreateReviewRequest(10, "Great."));
+
+        reviewService.delete(watch.getId(), review.id(), firstUser.user().id());
+
+        var updatedWatch = watchRepository.findById(watch.getId()).orElseThrow();
+        assertThat(updatedWatch.getAverageRating()).isEqualByComparingTo("10.00");
+        assertThat(updatedWatch.getReviewsCount()).isEqualTo(1);
+        assertThat(reviewService.listByWatch(watch.getId(), PageRequest.of(0, 10)).getContent())
+                .singleElement()
+                .satisfies(remainingReview -> assertThat(remainingReview.reviewerId()).isEqualTo(secondUser.user().id()));
+    }
+
+    @Test
+    void rejectsUpdatingReviewOwnedByAnotherUser() {
+        var owner = authService.register(new RegisterRequest("reviewowner", "reviewowner@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("reviewintruder", "reviewintruder@example.com", "StrongPassword123"));
+        var watch = saveCatalogWatch("Grand Seiko", "Snowflake");
+        var review = reviewService.create(watch.getId(), owner.user().id(), new CreateReviewRequest(9, "Beautiful finishing."));
+
+        assertThatThrownBy(() -> reviewService.update(
+                watch.getId(),
+                review.id(),
+                otherUser.user().id(),
+                new UpdateReviewRequest(1, "Trying to overwrite.")
+        ))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Review belongs to another user");
     }
 
     @Test
