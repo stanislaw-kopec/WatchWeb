@@ -4,7 +4,9 @@ import com.watchweb.app.domain.auth.dto.RegisterRequest;
 import com.watchweb.app.domain.auth.dto.LoginRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.service.AuthService;
+import com.watchweb.app.domain.comment.dto.CreatePostCommentRequest;
 import com.watchweb.app.domain.comment.dto.CreateWatchCommentRequest;
+import com.watchweb.app.domain.comment.service.PostCommentService;
 import com.watchweb.app.domain.comment.service.WatchCommentService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
@@ -50,6 +52,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -104,6 +107,9 @@ class AppApplicationTests {
 
     @Autowired
     private WatchCommentService watchCommentService;
+
+    @Autowired
+    private PostCommentService postCommentService;
 
     @Autowired
     private PostService postService;
@@ -832,6 +838,128 @@ class AppApplicationTests {
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Post belongs to another user");
         assertThat(postRepository.findById(post.id()).orElseThrow().getDeletedAt()).isNull();
+    }
+
+    @Test
+    void createsPostWithNormalizedHashtags() {
+        var user = authService.register(new RegisterRequest("posthashtags", "posthashtags@example.com", "StrongPassword123"));
+
+        var response = postService.create(
+                user.user().id(),
+                new CreatePostRequest("Hashtag post", "This post has tags.", List.of("#Seiko", "Diver!", "Żegarek", "seiko"))
+        );
+
+        assertThat(response.hashtags()).containsExactly("diver", "seiko", "zegarek");
+    }
+
+    @Test
+    void updatesPostHashtagsAndReturnsPostToPending() {
+        var user = authService.register(new RegisterRequest("posthashtagupdate", "posthashtagupdate@example.com", "StrongPassword123"));
+        var post = postService.create(
+                user.user().id(),
+                new CreatePostRequest("Original hashtags", "Original content.", List.of("oldtag"))
+        );
+        postModerationService.approve(post.id());
+
+        var response = postService.update(
+                post.id(),
+                user.user().id(),
+                new UpdatePostRequest("Updated hashtags", "Updated content.", List.of("#NewTag"))
+        );
+
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThat(response.hashtags()).containsExactly("newtag");
+    }
+
+    @Test
+    void createsPostCommentTreeForApprovedPost() {
+        var author = authService.register(new RegisterRequest("postcommentauthor", "postcommentauthor@example.com", "StrongPassword123"));
+        var commenter = authService.register(new RegisterRequest("postcommenter", "postcommenter@example.com", "StrongPassword123"));
+        var post = postService.create(author.user().id(), new CreatePostRequest("Commented post", "Comments are welcome."));
+        postModerationService.approve(post.id());
+
+        var root = postCommentService.create(post.id(), commenter.user().id(), new CreatePostCommentRequest(null, "Root comment"));
+        var reply = postCommentService.create(post.id(), author.user().id(), new CreatePostCommentRequest(root.id(), "Reply comment"));
+
+        var tree = postCommentService.listTree(post.id());
+
+        assertThat(tree)
+                .singleElement()
+                .satisfies(rootComment -> {
+                    assertThat(rootComment.id()).isEqualTo(root.id());
+                    assertThat(rootComment.children())
+                            .singleElement()
+                            .satisfies(replyComment -> assertThat(replyComment.id()).isEqualTo(reply.id()));
+                });
+    }
+
+    @Test
+    void rejectsCommentingPendingPost() {
+        var author = authService.register(new RegisterRequest("pendingpostcommentauthor", "pendingpostcommentauthor@example.com", "StrongPassword123"));
+        var commenter = authService.register(new RegisterRequest("pendingpostcommenter", "pendingpostcommenter@example.com", "StrongPassword123"));
+        var post = postService.create(author.user().id(), new CreatePostRequest("Pending comments", "Not public yet."));
+
+        assertThatThrownBy(() -> postCommentService.create(
+                post.id(),
+                commenter.user().id(),
+                new CreatePostCommentRequest(null, "This should fail")
+        ))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
+    }
+
+    @Test
+    void rejectsPostCommentDepthOverThree() {
+        var author = authService.register(new RegisterRequest("postcommentdepthauthor", "postcommentdepthauthor@example.com", "StrongPassword123"));
+        var commenter = authService.register(new RegisterRequest("postcommentdepthuser", "postcommentdepthuser@example.com", "StrongPassword123"));
+        var post = postService.create(author.user().id(), new CreatePostRequest("Depth post", "Depth limit."));
+        postModerationService.approve(post.id());
+        var levelOne = postCommentService.create(post.id(), commenter.user().id(), new CreatePostCommentRequest(null, "Level 1"));
+        var levelTwo = postCommentService.create(post.id(), commenter.user().id(), new CreatePostCommentRequest(levelOne.id(), "Level 2"));
+        var levelThree = postCommentService.create(post.id(), commenter.user().id(), new CreatePostCommentRequest(levelTwo.id(), "Level 3"));
+
+        assertThatThrownBy(() -> postCommentService.create(
+                post.id(),
+                commenter.user().id(),
+                new CreatePostCommentRequest(levelThree.id(), "Level 4")
+        ))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Maximum comment depth is 3");
+    }
+
+    @Test
+    void softDeletesPostCommentAndKeepsReplies() {
+        var author = authService.register(new RegisterRequest("postcommentdeleteauthor", "postcommentdeleteauthor@example.com", "StrongPassword123"));
+        var commenter = authService.register(new RegisterRequest("postcommentdeleteuser", "postcommentdeleteuser@example.com", "StrongPassword123"));
+        var post = postService.create(author.user().id(), new CreatePostRequest("Delete comment post", "Deletion keeps replies."));
+        postModerationService.approve(post.id());
+        var root = postCommentService.create(post.id(), commenter.user().id(), new CreatePostCommentRequest(null, "Root comment"));
+        var reply = postCommentService.create(post.id(), author.user().id(), new CreatePostCommentRequest(root.id(), "Reply comment"));
+
+        postCommentService.delete(post.id(), root.id(), commenter.user().id(), false);
+
+        assertThat(postCommentService.listTree(post.id()))
+                .singleElement()
+                .satisfies(deletedRoot -> {
+                    assertThat(deletedRoot.deleted()).isTrue();
+                    assertThat(deletedRoot.content()).isNull();
+                    assertThat(deletedRoot.children())
+                            .singleElement()
+                            .satisfies(replyComment -> assertThat(replyComment.id()).isEqualTo(reply.id()));
+                });
+    }
+
+    @Test
+    void rejectsDeletingPostCommentOwnedByAnotherUserWithoutModeratorRole() {
+        var author = authService.register(new RegisterRequest("postcommentowner", "postcommentowner@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("postcommentintruder", "postcommentintruder@example.com", "StrongPassword123"));
+        var post = postService.create(author.user().id(), new CreatePostRequest("Owned comment post", "Only owner can delete."));
+        postModerationService.approve(post.id());
+        var comment = postCommentService.create(post.id(), author.user().id(), new CreatePostCommentRequest(null, "Owner comment"));
+
+        assertThatThrownBy(() -> postCommentService.delete(post.id(), comment.id(), otherUser.user().id(), false))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Comment belongs to another user");
     }
 
     @Test

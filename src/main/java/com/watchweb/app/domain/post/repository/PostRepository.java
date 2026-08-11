@@ -24,9 +24,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @EntityGraph(attributePaths = "author")
     Page<Post> findByAuthorIdAndStatusAndDeletedAtIsNull(UUID authorId, PostStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = "author")
+    @EntityGraph(attributePaths = {"author", "hashtags"})
     Optional<Post> findByIdAndDeletedAtIsNull(UUID id);
 
-    @EntityGraph(attributePaths = "author")
+    @EntityGraph(attributePaths = {"author", "hashtags"})
     Optional<Post> findByIdAndStatusAndDeletedAtIsNull(UUID id, PostStatus status);
 }

@@ -1,5 +1,6 @@
 package com.watchweb.app.domain.post.entity;
 
+import com.watchweb.app.domain.hashtag.entity.Hashtag;
 import com.watchweb.app.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,14 +10,19 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -52,6 +58,15 @@ public class Post {
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @ManyToMany
+    @BatchSize(size = 50)
+    @JoinTable(
+            name = "post_hashtags",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
+    )
+    private Set<Hashtag> hashtags = new LinkedHashSet<>();
 
     protected Post() {
     }
@@ -111,6 +126,10 @@ public class Post {
         return deletedAt;
     }
 
+    public Set<Hashtag> getHashtags() {
+        return hashtags;
+    }
+
     public void approve() {
         status = PostStatus.APPROVED;
         rejectionReason = null;
@@ -126,6 +145,11 @@ public class Post {
         this.content = content;
         status = PostStatus.PENDING;
         rejectionReason = null;
+    }
+
+    public void replaceHashtags(Set<Hashtag> hashtags) {
+        this.hashtags.clear();
+        this.hashtags.addAll(hashtags);
     }
 
     public void softDelete() {

@@ -5,6 +5,8 @@ import com.watchweb.app.domain.post.entity.PostStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @Schema(description = "User post response")
@@ -30,6 +32,9 @@ public record PostResponse(
         @Schema(description = "Reason provided when the post was rejected")
         String rejectionReason,
 
+        @Schema(description = "Normalized hashtags assigned to this post", example = "[\"seiko\", \"alpinist\"]")
+        List<String> hashtags,
+
         @Schema(description = "Creation timestamp", example = "2026-08-11T18:30:00Z")
         Instant createdAt
 ) {
@@ -43,6 +48,10 @@ public record PostResponse(
                 post.getContent(),
                 post.getStatus(),
                 post.getRejectionReason(),
+                post.getHashtags().stream()
+                        .map(hashtag -> hashtag.getName())
+                        .sorted(Comparator.naturalOrder())
+                        .toList(),
                 post.getCreatedAt()
         );
     }

@@ -1,5 +1,6 @@
 package com.watchweb.app.domain.post.service;
 
+import com.watchweb.app.domain.hashtag.service.HashtagService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.PostResponse;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
@@ -21,10 +22,12 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final HashtagService hashtagService;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, HashtagService hashtagService) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.hashtagService = hashtagService;
     }
 
     @Transactional
@@ -33,6 +36,7 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + authorId));
 
         var post = new Post(author, request.title().trim(), request.content().trim());
+        post.replaceHashtags(hashtagService.resolve(request.hashtags()));
         return PostResponse.fromEntity(postRepository.saveAndFlush(post));
     }
 
@@ -46,6 +50,7 @@ public class PostService {
         }
 
         post.updateByAuthor(request.title().trim(), request.content().trim());
+        post.replaceHashtags(hashtagService.resolve(request.hashtags()));
         return PostResponse.fromEntity(postRepository.saveAndFlush(post));
     }
 
