@@ -13,17 +13,20 @@ import java.util.UUID;
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @EntityGraph(attributePaths = "author")
-    Page<Post> findAll(Pageable pageable);
+    Page<Post> findByDeletedAtIsNull(Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    Page<Post> findByStatus(PostStatus status, Pageable pageable);
+    Page<Post> findByStatusAndDeletedAtIsNull(PostStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    Page<Post> findByAuthorId(UUID authorId, Pageable pageable);
+    Page<Post> findByAuthorIdAndDeletedAtIsNull(UUID authorId, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    Page<Post> findByAuthorIdAndStatus(UUID authorId, PostStatus status, Pageable pageable);
+    Page<Post> findByAuthorIdAndStatusAndDeletedAtIsNull(UUID authorId, PostStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    Optional<Post> findByIdAndStatus(UUID id, PostStatus status);
+    Optional<Post> findByIdAndDeletedAtIsNull(UUID id);
+
+    @EntityGraph(attributePaths = "author")
+    Optional<Post> findByIdAndStatusAndDeletedAtIsNull(UUID id, PostStatus status);
 }

@@ -38,7 +38,7 @@ public class PostService {
 
     @Transactional
     public PostResponse update(UUID postId, UUID authorId, UpdatePostRequest request) {
-        var post = postRepository.findById(postId)
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + postId));
 
         if (!post.getAuthor().getId().equals(authorId)) {
@@ -49,26 +49,39 @@ public class PostService {
         return PostResponse.fromEntity(postRepository.saveAndFlush(post));
     }
 
+    @Transactional
+    public void delete(UUID postId, UUID authorId) {
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + postId));
+
+        if (!post.getAuthor().getId().equals(authorId)) {
+            throw new AccessDeniedException("Post belongs to another user");
+        }
+
+        post.softDelete();
+        postRepository.saveAndFlush(post);
+    }
+
     @Transactional(readOnly = true)
     public Page<PostResponse> listApproved(Pageable pageable) {
-        return postRepository.findByStatus(PostStatus.APPROVED, pageable)
+        return postRepository.findByStatusAndDeletedAtIsNull(PostStatus.APPROVED, pageable)
                 .map(PostResponse::fromEntity);
     }
 
     @Transactional(readOnly = true)
     public Page<PostResponse> listMine(UUID authorId, PostStatus status, Pageable pageable) {
         if (status == null) {
-            return postRepository.findByAuthorId(authorId, pageable)
+            return postRepository.findByAuthorIdAndDeletedAtIsNull(authorId, pageable)
                     .map(PostResponse::fromEntity);
         }
 
-        return postRepository.findByAuthorIdAndStatus(authorId, status, pageable)
+        return postRepository.findByAuthorIdAndStatusAndDeletedAtIsNull(authorId, status, pageable)
                 .map(PostResponse::fromEntity);
     }
 
     @Transactional(readOnly = true)
     public PostResponse getApprovedById(UUID id) {
-        return postRepository.findByIdAndStatus(id, PostStatus.APPROVED)
+        return postRepository.findByIdAndStatusAndDeletedAtIsNull(id, PostStatus.APPROVED)
                 .map(PostResponse::fromEntity)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + id));
     }

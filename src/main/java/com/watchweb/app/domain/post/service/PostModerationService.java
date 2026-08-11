@@ -24,15 +24,15 @@ public class PostModerationService {
     @Transactional(readOnly = true)
     public Page<PostResponse> list(PostStatus status, Pageable pageable) {
         var posts = status == null
-                ? postRepository.findAll(pageable)
-                : postRepository.findByStatus(status, pageable);
+                ? postRepository.findByDeletedAtIsNull(pageable)
+                : postRepository.findByStatusAndDeletedAtIsNull(status, pageable);
 
         return posts.map(PostResponse::fromEntity);
     }
 
     @Transactional
     public PostResponse approve(UUID postId) {
-        var post = postRepository.findById(postId)
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + postId));
 
         ensurePending(postId, post.isPending());
@@ -43,7 +43,7 @@ public class PostModerationService {
 
     @Transactional
     public PostResponse reject(UUID postId, String reason) {
-        var post = postRepository.findById(postId)
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + postId));
 
         ensurePending(postId, post.isPending());

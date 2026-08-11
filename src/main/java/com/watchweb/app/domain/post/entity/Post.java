@@ -50,6 +50,9 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     protected Post() {
     }
 
@@ -104,6 +107,10 @@ public class Post {
         return updatedAt;
     }
 
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
     public void approve() {
         status = PostStatus.APPROVED;
         rejectionReason = null;
@@ -121,8 +128,16 @@ public class Post {
         rejectionReason = null;
     }
 
+    public void softDelete() {
+        deletedAt = Instant.now();
+    }
+
     public boolean isPending() {
         return status == PostStatus.PENDING;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 
     @Override

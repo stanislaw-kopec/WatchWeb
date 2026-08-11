@@ -788,6 +788,53 @@ class AppApplicationTests {
     }
 
     @Test
+    void softDeletesOwnApprovedPostAndHidesItFromPublicAndMineLists() {
+        var user = authService.register(new RegisterRequest("postdeleteapproved", "postdeleteapproved@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Delete approved", "This will be hidden."));
+        postModerationService.approve(post.id());
+
+        postService.delete(post.id(), user.user().id());
+
+        assertThat(postRepository.findById(post.id()).orElseThrow().getDeletedAt()).isNotNull();
+        assertThatThrownBy(() -> postService.getApprovedById(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
+        assertThat(postService.listMine(user.user().id(), null, PageRequest.of(0, 20)).getContent())
+                .noneSatisfy(response -> assertThat(response.id()).isEqualTo(post.id()));
+    }
+
+    @Test
+    void softDeletesOwnPendingPostAndRemovesItFromModerationQueue() {
+        var user = authService.register(new RegisterRequest("postdeletepending", "postdeletepending@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Delete pending", "This should leave the queue."));
+
+        postService.delete(post.id(), user.user().id());
+
+        var page = postModerationService.list(
+                PostStatus.PENDING,
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .noneSatisfy(response -> assertThat(response.id()).isEqualTo(post.id()));
+        assertThatThrownBy(() -> postModerationService.approve(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
+    }
+
+    @Test
+    void rejectsDeletingPostOwnedByAnotherUser() {
+        var owner = authService.register(new RegisterRequest("postdeleteowner", "postdeleteowner@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("postdeleteintruder", "postdeleteintruder@example.com", "StrongPassword123"));
+        var post = postService.create(owner.user().id(), new CreatePostRequest("Owner delete post", "Only owner can delete this."));
+
+        assertThatThrownBy(() -> postService.delete(post.id(), otherUser.user().id()))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Post belongs to another user");
+        assertThat(postRepository.findById(post.id()).orElseThrow().getDeletedAt()).isNull();
+    }
+
+    @Test
     void approvesWatchSubmissionAndCreatesCatalogWatch() {
         var user = authService.register(new RegisterRequest("approvesubmission", "approvesubmission@example.com", "StrongPassword123"));
         var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Tissot", "PRX"));
