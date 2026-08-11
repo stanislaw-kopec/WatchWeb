@@ -41,6 +41,8 @@ import com.watchweb.app.exception.DuplicateResourceException;
 import com.watchweb.app.exception.InvalidCredentialsException;
 import com.watchweb.app.exception.InvalidOperationException;
 import com.watchweb.app.exception.ResourceNotFoundException;
+import com.watchweb.app.infrastructure.storage.StorageFolder;
+import com.watchweb.app.infrastructure.storage.StorageService;
 import com.watchweb.app.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +51,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -56,6 +59,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -65,6 +70,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Testcontainers
 @SpringBootTest
 class AppApplicationTests {
+
+    private static final Path TEST_STORAGE_PATH = Path.of("target", "test-storage").toAbsolutePath();
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18")
@@ -77,6 +84,7 @@ class AppApplicationTests {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("app.storage.local.base-path", TEST_STORAGE_PATH::toString);
     }
 
     @Autowired
@@ -132,6 +140,9 @@ class AppApplicationTests {
 
     @Autowired
     private ArticleRepository articleRepository;
+
+    @Autowired
+    private StorageService storageService;
 
     @Test
     void contextLoads() {
@@ -1116,6 +1127,60 @@ class AppApplicationTests {
                 .hasMessage("Article not found: " + article.id());
         assertThat(articleService.list(PageRequest.of(0, 20)).getContent())
                 .noneSatisfy(response -> assertThat(response.id()).isEqualTo(article.id()));
+    }
+
+    @Test
+    void storesAllowedImageAndLoadsIt() throws Exception {
+        var file = new MockMultipartFile(
+                "file",
+                "avatar.jpg",
+                "image/jpeg",
+                "fake-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var storedFile = storageService.store(file, StorageFolder.AVATARS);
+        var resource = storageService.load(storedFile.folder(), storedFile.filename());
+
+        assertThat(storedFile.folder()).isEqualTo("avatars");
+        assertThat(storedFile.filename()).endsWith(".jpg");
+        assertThat(storedFile.url()).startsWith("/api/files/avatars/");
+        assertThat(resource.exists()).isTrue();
+        assertThat(resource.getInputStream().readAllBytes()).isEqualTo("fake-image-content".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void rejectsUnsupportedFileType() {
+        var file = new MockMultipartFile(
+                "file",
+                "avatar.gif",
+                "image/gif",
+                "fake-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        assertThatThrownBy(() -> storageService.store(file, StorageFolder.AVATARS))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Only JPG, PNG and WEBP files are allowed");
+    }
+
+    @Test
+    void rejectsTooLargeFile() {
+        var file = new MockMultipartFile(
+                "file",
+                "avatar.png",
+                "image/png",
+                new byte[(5 * 1024 * 1024) + 1]
+        );
+
+        assertThatThrownBy(() -> storageService.store(file, StorageFolder.AVATARS))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("File size must not exceed 5 MB");
+    }
+
+    @Test
+    void rejectsLoadingMissingFile() {
+        assertThatThrownBy(() -> storageService.load("avatars", "missing.jpg"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("File not found");
     }
 
     @Test
