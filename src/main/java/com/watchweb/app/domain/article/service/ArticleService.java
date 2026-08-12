@@ -7,11 +7,14 @@ import com.watchweb.app.domain.article.entity.Article;
 import com.watchweb.app.domain.article.repository.ArticleRepository;
 import com.watchweb.app.domain.user.repository.UserRepository;
 import com.watchweb.app.exception.ResourceNotFoundException;
+import com.watchweb.app.infrastructure.storage.StorageFolder;
+import com.watchweb.app.infrastructure.storage.StorageService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -20,10 +23,16 @@ public class ArticleService {
 
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
+    private final StorageService storageService;
 
-    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository) {
+    public ArticleService(
+            ArticleRepository articleRepository,
+            UserRepository userRepository,
+            StorageService storageService
+    ) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
+        this.storageService = storageService;
     }
 
     @Transactional
@@ -53,6 +62,19 @@ public class ArticleService {
 
         ensureOwnerOrAdmin(article, userId, canManageAnyArticle);
         article.update(request.title().trim(), request.content().trim());
+
+        return ArticleResponse.fromEntity(articleRepository.saveAndFlush(article));
+    }
+
+    @Transactional
+    public ArticleResponse updateHeaderImage(UUID articleId, UUID userId, boolean canManageAnyArticle, MultipartFile file) {
+        var article = articleRepository.findByIdAndDeletedAtIsNull(articleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Article not found: " + articleId));
+
+        ensureOwnerOrAdmin(article, userId, canManageAnyArticle);
+
+        var storedFile = storageService.store(file, StorageFolder.ARTICLE_IMAGES);
+        article.updateHeaderImageUrl(storedFile.url());
 
         return ArticleResponse.fromEntity(articleRepository.saveAndFlush(article));
     }

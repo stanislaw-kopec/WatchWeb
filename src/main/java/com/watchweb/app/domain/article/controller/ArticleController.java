@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,8 +31,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -154,6 +157,47 @@ public class ArticleController {
             @Valid @RequestBody UpdateArticleRequest request
     ) {
         return articleService.update(id, principal.getId(), canManageAnyArticle(principal), request);
+    }
+
+    @PutMapping(path = "/{id}/header-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "Update article header image", description = "Uploads and assigns a JPG, PNG or WEBP header image to an article.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Header image updated",
+                    content = @Content(schema = @Schema(implementation = ArticleResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid file",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Insufficient role or article belongs to another user",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Article not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public ArticleResponse updateHeaderImage(
+            @Parameter(description = "Article identifier", required = true)
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Parameter(description = "Article header image file", required = true)
+            @RequestPart("file") MultipartFile file
+    ) {
+        return articleService.updateHeaderImage(id, principal.getId(), canManageAnyArticle(principal), file);
     }
 
     @DeleteMapping("/{id}")

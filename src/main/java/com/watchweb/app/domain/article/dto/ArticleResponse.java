@@ -23,6 +23,9 @@ public record ArticleResponse(
         @Schema(description = "Article content")
         String content,
 
+        @Schema(description = "Article header image URL")
+        String headerImageUrl,
+
         @Schema(description = "Creation timestamp", example = "2026-08-11T18:30:00Z")
         Instant createdAt,
 
@@ -37,6 +40,7 @@ public record ArticleResponse(
                 article.getAuthor().getUsername(),
                 article.getTitle(),
                 article.getContent(),
+                article.getHeaderImageUrl(),
                 article.getCreatedAt(),
                 article.getUpdatedAt()
         );

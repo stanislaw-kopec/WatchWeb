@@ -35,6 +35,9 @@ public class Article {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "header_image_url", length = 500)
+    private String headerImageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -81,6 +84,10 @@ public class Article {
         return content;
     }
 
+    public String getHeaderImageUrl() {
+        return headerImageUrl;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -96,6 +103,10 @@ public class Article {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void updateHeaderImageUrl(String headerImageUrl) {
+        this.headerImageUrl = headerImageUrl;
     }
 
     public void softDelete() {

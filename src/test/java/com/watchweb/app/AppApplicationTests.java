@@ -1132,6 +1132,96 @@ class AppApplicationTests {
     }
 
     @Test
+    void authorUpdatesArticleHeaderImage() throws Exception {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articleimageauthor",
+                "articleimageauthor@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Image article", "This article needs a header image.")
+        );
+        var file = new MockMultipartFile(
+                "file",
+                "header.webp",
+                "image/webp",
+                "header-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = articleService.updateHeaderImage(article.id(), journalist.getId(), false, file);
+
+        assertThat(response.headerImageUrl()).startsWith("/api/files/article-images/");
+        assertThat(response.headerImageUrl()).endsWith(".webp");
+
+        var filename = response.headerImageUrl().substring(response.headerImageUrl().lastIndexOf('/') + 1);
+        var resource = storageService.load("article-images", filename);
+        assertThat(resource.getInputStream().readAllBytes()).isEqualTo("header-image-content".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void rejectsUpdatingArticleHeaderImageOwnedByAnotherJournalist() {
+        var owner = userRepository.saveAndFlush(new User(
+                "articleimageowner",
+                "articleimageowner@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var otherJournalist = userRepository.saveAndFlush(new User(
+                "articleimageother",
+                "articleimageother@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var article = articleService.create(
+                owner.getId(),
+                new CreateArticleRequest("Owner image article", "Only owner can set the image.")
+        );
+        var file = new MockMultipartFile(
+                "file",
+                "header.jpg",
+                "image/jpeg",
+                "header-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        assertThatThrownBy(() -> articleService.updateHeaderImage(article.id(), otherJournalist.getId(), false, file))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Article belongs to another user");
+    }
+
+    @Test
+    void adminUpdatesArticleHeaderImageOwnedByJournalist() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articleimageadminowner",
+                "articleimageadminowner@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var admin = userRepository.saveAndFlush(new User(
+                "articleimageadmin",
+                "articleimageadmin@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_ADMIN
+        ));
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Admin image article", "Admin can set the image.")
+        );
+        var file = new MockMultipartFile(
+                "file",
+                "header.png",
+                "image/png",
+                "header-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = articleService.updateHeaderImage(article.id(), admin.getId(), true, file);
+
+        assertThat(response.headerImageUrl()).startsWith("/api/files/article-images/");
+        assertThat(response.headerImageUrl()).endsWith(".png");
+    }
+
+    @Test
     void softDeletesArticleAndHidesItFromPublicReads() {
         var journalist = userRepository.saveAndFlush(new User(
                 "articledeleteauthor",
