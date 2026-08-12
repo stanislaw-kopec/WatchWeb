@@ -13,6 +13,8 @@ import com.watchweb.app.domain.comment.dto.CreatePostCommentRequest;
 import com.watchweb.app.domain.comment.dto.CreateWatchCommentRequest;
 import com.watchweb.app.domain.comment.service.PostCommentService;
 import com.watchweb.app.domain.comment.service.WatchCommentService;
+import com.watchweb.app.domain.notification.entity.NotificationType;
+import com.watchweb.app.domain.notification.service.NotificationService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.entity.PostStatus;
@@ -137,6 +139,9 @@ class AppApplicationTests {
 
     @Autowired
     private PostCommentService postCommentService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private PostService postService;
@@ -794,6 +799,53 @@ class AppApplicationTests {
         assertThat(event.authorId()).isEqualTo(user.user().id());
         assertThat(event.title()).isEqualTo("Rejected event");
         assertThat(event.reason()).isEqualTo("Needs more detail.");
+    }
+
+    @Test
+    void createsNotificationWhenPostIsApproved() {
+        var user = authService.register(new RegisterRequest("postapprovednotification", "postapprovednotification@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Approved notification", "Author should see approval."));
+
+        postModerationService.approve(post.id());
+
+        var page = notificationService.list(user.user().id(), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+        assertThat(page.getContent())
+                .anySatisfy(notification -> {
+                    assertThat(notification.type()).isEqualTo(NotificationType.POST_APPROVED);
+                    assertThat(notification.message()).isEqualTo("Post approved: Approved notification");
+                    assertThat(notification.targetId()).isEqualTo(post.id());
+                    assertThat(notification.read()).isFalse();
+                });
+    }
+
+    @Test
+    void createsNotificationWhenPostIsRejected() {
+        var user = authService.register(new RegisterRequest("postrejectednotification", "postrejectednotification@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Rejected notification", "Author should see rejection."));
+
+        postModerationService.reject(post.id(), "Needs more context");
+
+        var page = notificationService.list(user.user().id(), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+        assertThat(page.getContent())
+                .anySatisfy(notification -> {
+                    assertThat(notification.type()).isEqualTo(NotificationType.POST_REJECTED);
+                    assertThat(notification.message()).isEqualTo("Post rejected: Rejected notification. Reason: Needs more context");
+                    assertThat(notification.targetId()).isEqualTo(post.id());
+                    assertThat(notification.read()).isFalse();
+                });
+    }
+
+    @Test
+    void marksOwnNotificationAsRead() {
+        var user = authService.register(new RegisterRequest("readnotification", "readnotification@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Read notification", "Author should mark it read."));
+        postModerationService.approve(post.id());
+        var notification = notificationService.list(user.user().id(), PageRequest.of(0, 20)).getContent().getFirst();
+
+        var response = notificationService.markAsRead(notification.id(), user.user().id());
+
+        assertThat(response.read()).isTrue();
+        assertThat(response.readAt()).isNotNull();
     }
 
     @Test

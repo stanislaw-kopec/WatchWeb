@@ -1,9 +1,8 @@
 package com.watchweb.app.domain.notification.service;
 
+import com.watchweb.app.domain.notification.entity.NotificationType;
 import com.watchweb.app.domain.post.event.PostApprovedEvent;
 import com.watchweb.app.domain.post.event.PostRejectedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -11,15 +10,29 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 public class PostModerationNotificationListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostModerationNotificationListener.class);
+    private final NotificationService notificationService;
+
+    public PostModerationNotificationListener(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostApproved(PostApprovedEvent event) {
-        LOGGER.info("Post approved notification event received for post {} and author {}", event.postId(), event.authorId());
+        notificationService.create(
+                event.authorId(),
+                NotificationType.POST_APPROVED,
+                "Post approved: " + event.title(),
+                event.postId()
+        );
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostRejected(PostRejectedEvent event) {
-        LOGGER.info("Post rejected notification event received for post {} and author {}", event.postId(), event.authorId());
+        notificationService.create(
+                event.authorId(),
+                NotificationType.POST_REJECTED,
+                "Post rejected: " + event.title() + ". Reason: " + event.reason(),
+                event.postId()
+        );
     }
 }
