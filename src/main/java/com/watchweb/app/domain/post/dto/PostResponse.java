@@ -32,6 +32,9 @@ public record PostResponse(
         @Schema(description = "Reason provided when the post was rejected")
         String rejectionReason,
 
+        @Schema(description = "Post image URL")
+        String imageUrl,
+
         @Schema(description = "Normalized hashtags assigned to this post", example = "[\"seiko\", \"alpinist\"]")
         List<String> hashtags,
 
@@ -48,6 +51,7 @@ public record PostResponse(
                 post.getContent(),
                 post.getStatus(),
                 post.getRejectionReason(),
+                post.getImageUrl(),
                 post.getHashtags().stream()
                         .map(hashtag -> hashtag.getName())
                         .sorted(Comparator.naturalOrder())

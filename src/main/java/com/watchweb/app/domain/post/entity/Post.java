@@ -50,6 +50,9 @@ public class Post {
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -114,6 +117,10 @@ public class Post {
         return rejectionReason;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -150,6 +157,12 @@ public class Post {
     public void replaceHashtags(Set<Hashtag> hashtags) {
         this.hashtags.clear();
         this.hashtags.addAll(hashtags);
+    }
+
+    public void updateImageByAuthor(String imageUrl) {
+        this.imageUrl = imageUrl;
+        status = PostStatus.PENDING;
+        rejectionReason = null;
     }
 
     public void softDelete() {

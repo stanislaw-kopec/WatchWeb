@@ -9,11 +9,14 @@ import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.repository.PostRepository;
 import com.watchweb.app.domain.user.repository.UserRepository;
 import com.watchweb.app.exception.ResourceNotFoundException;
+import com.watchweb.app.infrastructure.storage.StorageFolder;
+import com.watchweb.app.infrastructure.storage.StorageService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -23,11 +26,18 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final HashtagService hashtagService;
+    private final StorageService storageService;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository, HashtagService hashtagService) {
+    public PostService(
+            PostRepository postRepository,
+            UserRepository userRepository,
+            HashtagService hashtagService,
+            StorageService storageService
+    ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.hashtagService = hashtagService;
+        this.storageService = storageService;
     }
 
     @Transactional
@@ -51,6 +61,21 @@ public class PostService {
 
         post.updateByAuthor(request.title().trim(), request.content().trim());
         post.replaceHashtags(hashtagService.resolve(request.hashtags()));
+        return PostResponse.fromEntity(postRepository.saveAndFlush(post));
+    }
+
+    @Transactional
+    public PostResponse updateImage(UUID postId, UUID authorId, MultipartFile file) {
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + postId));
+
+        if (!post.getAuthor().getId().equals(authorId)) {
+            throw new AccessDeniedException("Post belongs to another user");
+        }
+
+        var storedFile = storageService.store(file, StorageFolder.POST_IMAGES);
+        post.updateImageByAuthor(storedFile.url());
+
         return PostResponse.fromEntity(postRepository.saveAndFlush(post));
     }
 

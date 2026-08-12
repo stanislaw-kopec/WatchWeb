@@ -793,6 +793,50 @@ class AppApplicationTests {
     }
 
     @Test
+    void updatesOwnPostImageAndReturnsApprovedPostToPendingModeration() throws Exception {
+        var user = authService.register(new RegisterRequest("postimageowner", "postimageowner@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Post with image", "This post will get an image."));
+        postModerationService.approve(post.id());
+        var file = new MockMultipartFile(
+                "file",
+                "post-image.jpg",
+                "image/jpeg",
+                "post-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = postService.updateImage(post.id(), user.user().id(), file);
+
+        assertThat(response.imageUrl()).startsWith("/api/files/post-images/");
+        assertThat(response.imageUrl()).endsWith(".jpg");
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThat(response.rejectionReason()).isNull();
+        assertThatThrownBy(() -> postService.getApprovedById(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + post.id());
+
+        var filename = response.imageUrl().substring(response.imageUrl().lastIndexOf('/') + 1);
+        var resource = storageService.load("post-images", filename);
+        assertThat(resource.getInputStream().readAllBytes()).isEqualTo("post-image-content".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void rejectsUpdatingPostImageOwnedByAnotherUser() {
+        var owner = authService.register(new RegisterRequest("postimageowner2", "postimageowner2@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("postimageintruder", "postimageintruder@example.com", "StrongPassword123"));
+        var post = postService.create(owner.user().id(), new CreatePostRequest("Owner image post", "Only owner can set image."));
+        var file = new MockMultipartFile(
+                "file",
+                "post-image.png",
+                "image/png",
+                "post-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        assertThatThrownBy(() -> postService.updateImage(post.id(), otherUser.user().id(), file))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Post belongs to another user");
+    }
+
+    @Test
     void listsOwnPostsWithAllStatuses() {
         var user = authService.register(new RegisterRequest("postmine", "postmine@example.com", "StrongPassword123"));
         var otherUser = authService.register(new RegisterRequest("postmineother", "postmineother@example.com", "StrongPassword123"));
