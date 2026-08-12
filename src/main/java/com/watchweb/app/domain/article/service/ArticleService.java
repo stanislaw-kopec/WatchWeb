@@ -46,7 +46,19 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public Page<ArticleResponse> list(Pageable pageable) {
-        return articleRepository.findByDeletedAtIsNull(pageable)
+        return search(null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ArticleResponse> search(String query, Pageable pageable) {
+        var normalizedQuery = normalizeQuery(query);
+
+        if (normalizedQuery == null) {
+            return articleRepository.findByDeletedAtIsNull(pageable)
+                    .map(ArticleResponse::fromEntity);
+        }
+
+        return articleRepository.searchByText(normalizedQuery, pageable)
                 .map(ArticleResponse::fromEntity);
     }
 
@@ -99,5 +111,12 @@ public class ArticleService {
         if (!canManageAnyArticle && !article.getAuthor().getId().equals(userId)) {
             throw new AccessDeniedException("Article belongs to another user");
         }
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        return query.trim();
     }
 }

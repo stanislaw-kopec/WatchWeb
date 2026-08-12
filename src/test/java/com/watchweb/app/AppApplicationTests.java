@@ -13,6 +13,7 @@ import com.watchweb.app.domain.comment.dto.CreatePostCommentRequest;
 import com.watchweb.app.domain.comment.dto.CreateWatchCommentRequest;
 import com.watchweb.app.domain.comment.service.PostCommentService;
 import com.watchweb.app.domain.comment.service.WatchCommentService;
+import com.watchweb.app.domain.hashtag.service.HashtagService;
 import com.watchweb.app.domain.notification.entity.NotificationType;
 import com.watchweb.app.domain.notification.service.NotificationService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
@@ -153,6 +154,9 @@ class AppApplicationTests {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private HashtagService hashtagService;
 
     @Autowired
     private WatchSubmissionModerationService watchSubmissionModerationService;
@@ -831,6 +835,40 @@ class AppApplicationTests {
     }
 
     @Test
+    void searchesApprovedPostsByTextAndHashtag() {
+        var user = authService.register(new RegisterRequest("postsearchauthor", "postsearchauthor@example.com", "StrongPassword123"));
+        var matchingPost = postService.create(
+                user.user().id(),
+                new CreatePostRequest("Vintage chronograph", "A practical guide to Seiko collecting.", List.of("#Seiko", "Chronograph"))
+        );
+        var wrongHashtagPost = postService.create(
+                user.user().id(),
+                new CreatePostRequest("Vintage chronograph from another brand", "This one should not match the hashtag.", List.of("omega"))
+        );
+        var pendingPost = postService.create(
+                user.user().id(),
+                new CreatePostRequest("Pending chronograph", "This one is not approved yet.", List.of("seiko"))
+        );
+        postModerationService.approve(matchingPost.id());
+        postModerationService.approve(wrongHashtagPost.id());
+
+        var page = postService.searchApproved(
+                "chronograph",
+                "#SEIKO",
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(post -> {
+                    assertThat(post.id()).isEqualTo(matchingPost.id());
+                    assertThat(post.hashtags()).contains("seiko");
+                });
+        assertThat(page.getContent())
+                .noneSatisfy(post -> assertThat(post.id()).isIn(wrongHashtagPost.id(), pendingPost.id()));
+    }
+
+    @Test
     void returnsApprovedPostById() {
         var user = authService.register(new RegisterRequest("postdetailsauthor", "postdetailsauthor@example.com", "StrongPassword123"));
         var post = postService.create(user.user().id(), new CreatePostRequest("Approved details", "Visible details."));
@@ -1206,6 +1244,21 @@ class AppApplicationTests {
     }
 
     @Test
+    void listsHashtagsByNormalizedPrefix() {
+        var user = authService.register(new RegisterRequest("hashtaglist", "hashtaglist@example.com", "StrongPassword123"));
+        postService.create(
+                user.user().id(),
+                new CreatePostRequest("Hashtag suggestions", "Create hashtags for suggestions.", List.of("#Seiko", "Speedmaster"))
+        );
+
+        var page = hashtagService.list("SE!", PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name")));
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(hashtag -> assertThat(hashtag.name()).isEqualTo("seiko"));
+    }
+
+    @Test
     void updatesPostHashtagsAndReturnsPostToPending() {
         var user = authService.register(new RegisterRequest("posthashtagupdate", "posthashtagupdate@example.com", "StrongPassword123"));
         var post = postService.create(
@@ -1354,6 +1407,32 @@ class AppApplicationTests {
         assertThat(page.getContent())
                 .anySatisfy(response -> assertThat(response.id()).isEqualTo(article.id()));
         assertThat(details.title()).isEqualTo("Public article");
+    }
+
+    @Test
+    void searchesArticlesByTitleOrContent() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articlesearchjournalist",
+                "articlesearchjournalist@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var matchingArticle = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Meteorite dials", "A guide to unusual watch materials.")
+        );
+        var otherArticle = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest("Dive watches", "Water resistance and bezels.")
+        );
+
+        var page = articleService.search("meteorite", PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(article -> assertThat(article.id()).isEqualTo(matchingArticle.id()));
+        assertThat(page.getContent())
+                .noneSatisfy(article -> assertThat(article.id()).isEqualTo(otherArticle.id()));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.watchweb.app.domain.post.service;
 
 import com.watchweb.app.domain.hashtag.service.HashtagService;
+import com.watchweb.app.domain.hashtag.service.HashtagNameNormalizer;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.PostResponse;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
@@ -26,17 +27,20 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final HashtagService hashtagService;
+    private final HashtagNameNormalizer hashtagNameNormalizer;
     private final StorageService storageService;
 
     public PostService(
             PostRepository postRepository,
             UserRepository userRepository,
             HashtagService hashtagService,
+            HashtagNameNormalizer hashtagNameNormalizer,
             StorageService storageService
     ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.hashtagService = hashtagService;
+        this.hashtagNameNormalizer = hashtagNameNormalizer;
         this.storageService = storageService;
     }
 
@@ -94,7 +98,19 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostResponse> listApproved(Pageable pageable) {
-        return postRepository.findByStatusAndDeletedAtIsNull(PostStatus.APPROVED, pageable)
+        return searchApproved(null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchApproved(String query, String hashtag, Pageable pageable) {
+        var normalizedQuery = normalizeQuery(query);
+        var normalizedHashtag = normalizeHashtag(hashtag);
+
+        if (hashtag != null && normalizedHashtag == null) {
+            return Page.empty(pageable);
+        }
+
+        return searchApprovedEntities(normalizedQuery, normalizedHashtag, pageable)
                 .map(PostResponse::fromEntity);
     }
 
@@ -114,5 +130,34 @@ public class PostService {
         return postRepository.findByIdAndStatusAndDeletedAtIsNull(id, PostStatus.APPROVED)
                 .map(PostResponse::fromEntity)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + id));
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        return query.trim();
+    }
+
+    private String normalizeHashtag(String hashtag) {
+        if (hashtag == null || hashtag.isBlank()) {
+            return null;
+        }
+
+        var normalized = hashtagNameNormalizer.normalize(hashtag);
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private Page<Post> searchApprovedEntities(String query, String hashtag, Pageable pageable) {
+        if (query == null && hashtag == null) {
+            return postRepository.findByStatusAndDeletedAtIsNull(PostStatus.APPROVED, pageable);
+        }
+        if (query == null) {
+            return postRepository.searchApprovedByHashtag(PostStatus.APPROVED, hashtag, pageable);
+        }
+        if (hashtag == null) {
+            return postRepository.searchApprovedByText(PostStatus.APPROVED, query, pageable);
+        }
+        return postRepository.searchApprovedByTextAndHashtag(PostStatus.APPROVED, query, hashtag, pageable);
     }
 }

@@ -1,8 +1,11 @@
 package com.watchweb.app.domain.hashtag.service;
 
+import com.watchweb.app.domain.hashtag.dto.HashtagResponse;
 import com.watchweb.app.domain.hashtag.entity.Hashtag;
 import com.watchweb.app.domain.hashtag.repository.HashtagRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +43,23 @@ public class HashtagService {
             hashtags.add(findOrCreate(normalizedName));
         }
         return hashtags;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<HashtagResponse> list(String query, Pageable pageable) {
+        var normalizedQuery = hashtagNameNormalizer.normalize(query);
+
+        if (query == null || query.isBlank()) {
+            return hashtagRepository.findAll(pageable)
+                    .map(HashtagResponse::fromEntity);
+        }
+
+        if (normalizedQuery.isBlank()) {
+            return Page.empty(pageable);
+        }
+
+        return hashtagRepository.findByNameStartingWith(normalizedQuery, pageable)
+                .map(HashtagResponse::fromEntity);
     }
 
     private Hashtag findOrCreate(String name) {

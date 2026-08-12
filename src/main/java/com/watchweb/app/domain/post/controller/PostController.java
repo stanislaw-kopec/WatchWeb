@@ -60,9 +60,13 @@ public class PostController {
             )
     })
     public Page<PostResponse> list(
+            @Parameter(description = "Optional text search in title or content", example = "seiko")
+            @RequestParam(required = false) String query,
+            @Parameter(description = "Optional hashtag filter. Value is normalized the same way as post hashtags.", example = "diver")
+            @RequestParam(required = false) String hashtag,
             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return postService.listApproved(pageable);
+        return postService.searchApproved(query, hashtag, pageable);
     }
 
     @GetMapping("/me")
