@@ -39,3 +39,23 @@ Po starcie aplikacji Swagger UI jest dostepny pod:
 ```text
 http://localhost:8081/swagger-ui.html
 ```
+
+## Dane startowe
+
+Uruchomienie przez Docker Compose wlacza profil `dev`, ktory automatycznie tworzy przykladowe dane do testowania API i przyszlego frontendu.
+
+Haslo dla wszystkich kont demo:
+
+```text
+Password123
+```
+
+Konta demo:
+
+```text
+admin@watchweb.local
+moderator@watchweb.local
+journalist@watchweb.local
+user@watchweb.local
+collector@watchweb.local
+```

@@ -8,6 +8,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/watchweb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
+      SPRING_PROFILES_ACTIVE: dev
       LOCAL_STORAGE_BASE_PATH: /app/storage
     ports:
       - "${APP_PORT:-8081}:8080"
