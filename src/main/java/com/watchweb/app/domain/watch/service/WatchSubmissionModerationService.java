@@ -5,11 +5,14 @@ import com.watchweb.app.domain.watch.dto.WatchResponse;
 import com.watchweb.app.domain.watch.dto.WatchSubmissionResponse;
 import com.watchweb.app.domain.watch.entity.Watch;
 import com.watchweb.app.domain.watch.entity.WatchSubmissionStatus;
+import com.watchweb.app.domain.watch.event.WatchSubmissionApprovedEvent;
+import com.watchweb.app.domain.watch.event.WatchSubmissionRejectedEvent;
 import com.watchweb.app.domain.watch.repository.WatchRepository;
 import com.watchweb.app.domain.watch.repository.WatchSubmissionRepository;
 import com.watchweb.app.exception.DuplicateResourceException;
 import com.watchweb.app.exception.InvalidOperationException;
 import com.watchweb.app.exception.ResourceNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,13 +27,16 @@ public class WatchSubmissionModerationService {
 
     private final WatchSubmissionRepository watchSubmissionRepository;
     private final WatchRepository watchRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public WatchSubmissionModerationService(
             WatchSubmissionRepository watchSubmissionRepository,
-            WatchRepository watchRepository
+            WatchRepository watchRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.watchSubmissionRepository = watchSubmissionRepository;
         this.watchRepository = watchRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -66,8 +72,17 @@ public class WatchSubmissionModerationService {
         );
 
         submission.approve();
+        watchSubmissionRepository.saveAndFlush(submission);
+        var savedWatch = watchRepository.saveAndFlush(watch);
+        eventPublisher.publishEvent(new WatchSubmissionApprovedEvent(
+                submission.getId(),
+                submission.getSubmittedBy().getId(),
+                savedWatch.getId(),
+                submission.getBrand(),
+                submission.getModel()
+        ));
 
-        return WatchResponse.fromEntity(watchRepository.saveAndFlush(watch));
+        return WatchResponse.fromEntity(savedWatch);
     }
 
     @Transactional
@@ -76,10 +91,19 @@ public class WatchSubmissionModerationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Watch submission not found: " + submissionId));
 
         ensurePending(submissionId, submission.isPending());
-        submission.reject(reason.trim());
+        var trimmedReason = reason.trim();
+        submission.reject(trimmedReason);
+        var savedSubmission = watchSubmissionRepository.saveAndFlush(submission);
+        eventPublisher.publishEvent(new WatchSubmissionRejectedEvent(
+                savedSubmission.getId(),
+                savedSubmission.getSubmittedBy().getId(),
+                savedSubmission.getBrand(),
+                savedSubmission.getModel(),
+                trimmedReason
+        ));
 
         return WatchSubmissionResponse.fromEntity(
-                watchSubmissionRepository.saveAndFlush(submission),
+                savedSubmission,
                 SUBMISSION_REJECTED_MESSAGE
         );
     }

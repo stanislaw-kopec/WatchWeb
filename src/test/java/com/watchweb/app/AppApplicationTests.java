@@ -1518,6 +1518,23 @@ class AppApplicationTests {
     }
 
     @Test
+    void createsNotificationWhenWatchSubmissionIsApproved() {
+        var user = authService.register(new RegisterRequest("watchapprovednotification", "watchapprovednotification@example.com", "StrongPassword123"));
+        var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Sinn", "U50"));
+
+        var watch = watchSubmissionModerationService.approve(submission.id());
+
+        var page = notificationService.list(user.user().id(), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+        assertThat(page.getContent())
+                .anySatisfy(notification -> {
+                    assertThat(notification.type()).isEqualTo(NotificationType.WATCH_SUBMISSION_APPROVED);
+                    assertThat(notification.message()).isEqualTo("Watch submission approved: Sinn U50");
+                    assertThat(notification.targetId()).isEqualTo(watch.id());
+                    assertThat(notification.read()).isFalse();
+                });
+    }
+
+    @Test
     void rejectsWatchSubmissionWithReason() {
         var user = authService.register(new RegisterRequest("rejectsubmission", "rejectsubmission@example.com", "StrongPassword123"));
         var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Citizen", "Tsuyosa"));
@@ -1528,6 +1545,23 @@ class AppApplicationTests {
         assertThat(response.message()).isEqualTo("Zgloszenie zostalo odrzucone.");
         var rejectedSubmission = watchSubmissionRepository.findById(submission.id()).orElseThrow();
         assertThat(rejectedSubmission.getRejectionReason()).isEqualTo("Duplicate-like model");
+    }
+
+    @Test
+    void createsNotificationWhenWatchSubmissionIsRejected() {
+        var user = authService.register(new RegisterRequest("watchrejectednotification", "watchrejectednotification@example.com", "StrongPassword123"));
+        var submission = watchSubmissionService.submit(user.user().id(), createWatchSubmissionRequest("Nomos", "Tangente"));
+
+        watchSubmissionModerationService.reject(submission.id(), "Missing reference details");
+
+        var page = notificationService.list(user.user().id(), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+        assertThat(page.getContent())
+                .anySatisfy(notification -> {
+                    assertThat(notification.type()).isEqualTo(NotificationType.WATCH_SUBMISSION_REJECTED);
+                    assertThat(notification.message()).isEqualTo("Watch submission rejected: Nomos Tangente. Reason: Missing reference details");
+                    assertThat(notification.targetId()).isEqualTo(submission.id());
+                    assertThat(notification.read()).isFalse();
+                });
     }
 
     @Test
