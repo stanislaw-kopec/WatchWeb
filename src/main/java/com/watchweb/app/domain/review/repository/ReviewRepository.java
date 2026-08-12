@@ -15,6 +15,9 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     Page<Review> findByWatchId(UUID watchId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"watch", "reviewer"})
+    Page<Review> findByReviewerId(UUID reviewerId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"watch", "reviewer"})
     Optional<Review> findByIdAndWatchId(UUID id, UUID watchId);
 
     boolean existsByWatchIdAndReviewerId(UUID watchId, UUID reviewerId);

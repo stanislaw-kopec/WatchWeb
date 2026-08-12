@@ -3,6 +3,7 @@ package com.watchweb.app.domain.review.service;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.ReviewResponse;
 import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
+import com.watchweb.app.domain.review.dto.UserReviewResponse;
 import com.watchweb.app.domain.review.entity.Review;
 import com.watchweb.app.domain.review.repository.ReviewRepository;
 import com.watchweb.app.domain.user.repository.UserRepository;
@@ -81,6 +82,16 @@ public class ReviewService {
 
         return reviewRepository.findByWatchId(watchId, pageable)
                 .map(ReviewResponse::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserReviewResponse> listByReviewer(UUID reviewerId, Pageable pageable) {
+        if (!userRepository.existsById(reviewerId)) {
+            throw new ResourceNotFoundException("User not found: " + reviewerId);
+        }
+
+        return reviewRepository.findByReviewerId(reviewerId, pageable)
+                .map(UserReviewResponse::fromEntity);
     }
 
     private Review findReviewForWatch(UUID watchId, UUID reviewId) {

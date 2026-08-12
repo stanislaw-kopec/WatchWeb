@@ -610,6 +610,38 @@ class AppApplicationTests {
     }
 
     @Test
+    void listsReviewsCreatedByUserWithWatchSummary() {
+        var reviewer = authService.register(new RegisterRequest("myreviews", "myreviews@example.com", "StrongPassword123"));
+        var otherReviewer = authService.register(new RegisterRequest("otherreviews", "otherreviews@example.com", "StrongPassword123"));
+        var firstWatch = saveCatalogWatch("Tudor", "Black Bay 58");
+        var secondWatch = saveCatalogWatch("Nomos", "Club Campus");
+        var otherWatch = saveCatalogWatch("Lorier", "Neptune");
+        var firstReview = reviewService.create(firstWatch.getId(), reviewer.user().id(), new CreateReviewRequest(9, "Great proportions."));
+        var secondReview = reviewService.create(secondWatch.getId(), reviewer.user().id(), new CreateReviewRequest(8, "Clean daily watch."));
+        reviewService.create(otherWatch.getId(), otherReviewer.user().id(), new CreateReviewRequest(7, "Different reviewer."));
+
+        var page = reviewService.listByReviewer(
+                reviewer.user().id(),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .hasSize(2)
+                .anySatisfy(review -> {
+                    assertThat(review.id()).isEqualTo(firstReview.id());
+                    assertThat(review.watchId()).isEqualTo(firstWatch.getId());
+                    assertThat(review.watchBrand()).isEqualTo("Tudor");
+                    assertThat(review.watchModel()).isEqualTo("Black Bay 58");
+                })
+                .anySatisfy(review -> {
+                    assertThat(review.id()).isEqualTo(secondReview.id());
+                    assertThat(review.watchId()).isEqualTo(secondWatch.getId());
+                    assertThat(review.watchBrand()).isEqualTo("Nomos");
+                    assertThat(review.watchModel()).isEqualTo("Club Campus");
+                });
+    }
+
+    @Test
     void updatesReviewAndRecalculatesWatchRatingStats() {
         var firstUser = authService.register(new RegisterRequest("updatereviewone", "updatereviewone@example.com", "StrongPassword123"));
         var secondUser = authService.register(new RegisterRequest("updatereviewtwo", "updatereviewtwo@example.com", "StrongPassword123"));
@@ -1766,6 +1798,32 @@ class AppApplicationTests {
                     assertThat(submission.submittedByUsername()).isEqualTo("listsubmissions");
                 })
                 .noneSatisfy(submission -> assertThat(submission.id()).isEqualTo(rejectedSubmission.id()));
+    }
+
+    @Test
+    void listsOwnWatchSubmissionsByStatus() {
+        var owner = authService.register(new RegisterRequest("ownsubmissions", "ownsubmissions@example.com", "StrongPassword123"));
+        var otherUser = authService.register(new RegisterRequest("othersubmissions", "othersubmissions@example.com", "StrongPassword123"));
+        var pendingSubmission = watchSubmissionService.submit(owner.user().id(), createWatchSubmissionRequest("Baltic", "Aquascaphe"));
+        var rejectedSubmission = watchSubmissionService.submit(owner.user().id(), createWatchSubmissionRequest("Yema", "Superman"));
+        var otherSubmission = watchSubmissionService.submit(otherUser.user().id(), createWatchSubmissionRequest("Squale", "1521"));
+        watchSubmissionModerationService.reject(rejectedSubmission.id(), "Reference code is unclear");
+
+        var page = watchSubmissionService.listMine(
+                owner.user().id(),
+                WatchSubmissionStatus.PENDING,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+
+        assertThat(page.getContent())
+                .singleElement()
+                .satisfies(submission -> {
+                    assertThat(submission.id()).isEqualTo(pendingSubmission.id());
+                    assertThat(submission.status()).isEqualTo(WatchSubmissionStatus.PENDING);
+                    assertThat(submission.rejectionReason()).isNull();
+                });
+        assertThat(page.getContent())
+                .noneSatisfy(submission -> assertThat(submission.id()).isIn(rejectedSubmission.id(), otherSubmission.id()));
     }
 
     @Test

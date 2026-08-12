@@ -2,6 +2,7 @@ package com.watchweb.app.domain.watch.service;
 
 import com.watchweb.app.domain.user.repository.UserRepository;
 import com.watchweb.app.domain.watch.dto.CreateWatchSubmissionRequest;
+import com.watchweb.app.domain.watch.dto.UserWatchSubmissionResponse;
 import com.watchweb.app.domain.watch.dto.WatchSubmissionResponse;
 import com.watchweb.app.domain.watch.entity.WatchSubmission;
 import com.watchweb.app.domain.watch.entity.WatchSubmissionStatus;
@@ -11,6 +12,8 @@ import com.watchweb.app.exception.DuplicateResourceException;
 import com.watchweb.app.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -73,6 +76,19 @@ public class WatchSubmissionService {
                 watchSubmissionRepository.saveAndFlush(submission),
                 SUBMISSION_ACCEPTED_MESSAGE
         );
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserWatchSubmissionResponse> listMine(
+            UUID submittedById,
+            WatchSubmissionStatus status,
+            Pageable pageable
+    ) {
+        var submissions = status == null
+                ? watchSubmissionRepository.findBySubmittedById(submittedById, pageable)
+                : watchSubmissionRepository.findBySubmittedByIdAndStatus(submittedById, status, pageable);
+
+        return submissions.map(UserWatchSubmissionResponse::fromEntity);
     }
 
     private String trimToNull(String value) {

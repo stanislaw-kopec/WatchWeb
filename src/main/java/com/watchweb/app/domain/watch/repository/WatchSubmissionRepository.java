@@ -17,6 +17,16 @@ public interface WatchSubmissionRepository extends JpaRepository<WatchSubmission
     @EntityGraph(attributePaths = "submittedBy")
     Page<WatchSubmission> findByStatus(WatchSubmissionStatus status, Pageable pageable);
 
+    @EntityGraph(attributePaths = "submittedBy")
+    Page<WatchSubmission> findBySubmittedById(UUID submittedById, Pageable pageable);
+
+    @EntityGraph(attributePaths = "submittedBy")
+    Page<WatchSubmission> findBySubmittedByIdAndStatus(
+            UUID submittedById,
+            WatchSubmissionStatus status,
+            Pageable pageable
+    );
+
     boolean existsByBrandNormalizedAndModelNormalizedAndStatus(
             String brandNormalized,
             String modelNormalized,
