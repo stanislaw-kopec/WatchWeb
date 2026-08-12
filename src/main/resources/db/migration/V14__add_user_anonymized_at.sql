@@ -1,0 +1,2 @@
+ALTER TABLE app_users
+    ADD COLUMN anonymized_at TIMESTAMP(6) WITH TIME ZONE;

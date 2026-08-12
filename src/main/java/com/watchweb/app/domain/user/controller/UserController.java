@@ -1,5 +1,6 @@
 package com.watchweb.app.domain.user.controller;
 
+import com.watchweb.app.domain.user.dto.UpdatePasswordRequest;
 import com.watchweb.app.domain.user.dto.UpdateUserProfileRequest;
 import com.watchweb.app.domain.user.dto.UserResponse;
 import com.watchweb.app.exception.ApiErrorResponse;
@@ -14,14 +15,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -139,5 +143,55 @@ public class UserController {
             @RequestPart("file") MultipartFile file
     ) {
         return userService.updateAvatar(principal.getId(), file);
+    }
+
+    @PutMapping("/me/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Update current user password", description = "Changes the authenticated user's password and revokes active refresh tokens.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Password updated"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing token or invalid current password",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public void updatePassword(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody UpdatePasswordRequest request
+    ) {
+        userService.updatePassword(principal.getId(), request);
+    }
+
+    @DeleteMapping("/me")
+    @Operation(summary = "Delete current user account", description = "Anonymizes the authenticated user's account while preserving historical content.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Account anonymized",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public UserResponse deleteCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return userService.anonymizeAccount(principal.getId());
     }
 }

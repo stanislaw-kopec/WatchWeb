@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             var userId = jwtService.extractUserId(token);
-            userRepository.findById(userId)
+            userRepository.findByIdAndAnonymizedAtIsNull(userId)
                     .map(UserPrincipal::fromEntity)
                     .ifPresent(principal -> {
                         var authentication = new UsernamePasswordAuthenticationToken(

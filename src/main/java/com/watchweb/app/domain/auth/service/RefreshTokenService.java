@@ -70,6 +70,16 @@ public class RefreshTokenService {
         refreshToken.revoke(now);
     }
 
+    @Transactional
+    public void revokeAllForUser(UUID userId) {
+        var now = Instant.now();
+        var tokens = refreshTokenRepository.findByUserIdAndRevokedAtIsNull(userId);
+
+        tokens.stream()
+                .filter(token -> token.isActive(now))
+                .forEach(token -> token.revoke(now));
+    }
+
     private String generateRawToken() {
         var randomBytes = new byte[32];
         secureRandom.nextBytes(randomBytes);

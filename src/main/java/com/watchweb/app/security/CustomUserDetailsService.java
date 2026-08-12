@@ -17,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailAndAnonymizedAtIsNull(email)
                 .map(UserPrincipal::fromEntity)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }

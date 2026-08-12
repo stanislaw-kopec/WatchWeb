@@ -24,6 +24,12 @@ public record UserResponse(
         @Schema(description = "Public avatar URL")
         String avatarUrl,
 
+        @Schema(description = "Whether this account has been anonymized")
+        boolean anonymized,
+
+        @Schema(description = "Account anonymization timestamp")
+        Instant anonymizedAt,
+
         @Schema(description = "Creation timestamp", example = "2026-08-11T18:30:00Z")
         Instant createdAt
 ) {
@@ -35,6 +41,8 @@ public record UserResponse(
                 user.getEmail(),
                 user.getRole(),
                 user.getAvatarUrl(),
+                user.isAnonymized(),
+                user.getAnonymizedAt(),
                 user.getCreatedAt()
         );
     }

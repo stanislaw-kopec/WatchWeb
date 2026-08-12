@@ -39,6 +39,9 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
+    @Column(name = "anonymized_at")
+    private Instant anonymizedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -91,6 +94,10 @@ public class User {
         return avatarUrl;
     }
 
+    public Instant getAnonymizedAt() {
+        return anonymizedAt;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -108,8 +115,25 @@ public class User {
         this.email = email;
     }
 
+    public void updatePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public void updateRole(Role role) {
         this.role = role;
+    }
+
+    public void anonymize(String username, String email, String passwordHash) {
+        this.username = username;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.role = Role.ROLE_USER;
+        this.avatarUrl = null;
+        this.anonymizedAt = Instant.now();
+    }
+
+    public boolean isAnonymized() {
+        return anonymizedAt != null;
     }
 
     @Override

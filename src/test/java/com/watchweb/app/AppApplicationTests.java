@@ -26,6 +26,7 @@ import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
 import com.watchweb.app.domain.review.service.ReviewService;
+import com.watchweb.app.domain.user.dto.UpdatePasswordRequest;
 import com.watchweb.app.domain.user.dto.UpdateUserProfileRequest;
 import com.watchweb.app.domain.user.dto.UpdateUserRoleRequest;
 import com.watchweb.app.domain.user.entity.Role;
@@ -259,6 +260,64 @@ class AppApplicationTests {
         ))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessage("Email is already taken");
+    }
+
+    @Test
+    void updatesPasswordAndRevokesRefreshTokens() {
+        var user = authService.register(new RegisterRequest("passworduser", "passworduser@example.com", "StrongPassword123"));
+        var loginResponse = authService.login(new LoginRequest("passworduser@example.com", "StrongPassword123"));
+
+        userService.updatePassword(
+                user.user().id(),
+                new UpdatePasswordRequest("StrongPassword123", "NewStrongPassword123")
+        );
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("passworduser@example.com", "StrongPassword123")))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid email or password");
+        assertThat(authService.login(new LoginRequest("passworduser@example.com", "NewStrongPassword123")).accessToken())
+                .isNotBlank();
+        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest(loginResponse.refreshToken())))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid refresh token");
+    }
+
+    @Test
+    void rejectsUpdatingPasswordWithInvalidCurrentPassword() {
+        var user = authService.register(new RegisterRequest("badcurrentpassword", "badcurrentpassword@example.com", "StrongPassword123"));
+
+        assertThatThrownBy(() -> userService.updatePassword(
+                user.user().id(),
+                new UpdatePasswordRequest("WrongPassword123", "NewStrongPassword123")
+        ))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid current password");
+    }
+
+    @Test
+    void anonymizesAccountAndPreservesHistoricalContent() {
+        var user = authService.register(new RegisterRequest("deleteaccount", "deleteaccount@example.com", "StrongPassword123"));
+        var loginResponse = authService.login(new LoginRequest("deleteaccount@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Historical post", "This post should keep its author reference."));
+
+        var response = userService.anonymizeAccount(user.user().id());
+
+        assertThat(response.anonymized()).isTrue();
+        assertThat(response.anonymizedAt()).isNotNull();
+        assertThat(response.username()).startsWith("deleted-user-");
+        assertThat(response.email()).startsWith("deleted-");
+        assertThat(response.avatarUrl()).isNull();
+
+        var savedUser = userRepository.findById(user.user().id()).orElseThrow();
+        assertThat(savedUser.isAnonymized()).isTrue();
+        assertThat(savedUser.getUsername()).startsWith("deleted-user-");
+        assertThat(postRepository.findById(post.id()).orElseThrow().getAuthor().getId()).isEqualTo(user.user().id());
+        assertThatThrownBy(() -> authService.login(new LoginRequest("deleteaccount@example.com", "StrongPassword123")))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid email or password");
+        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest(loginResponse.refreshToken())))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid refresh token");
     }
 
     @Test
