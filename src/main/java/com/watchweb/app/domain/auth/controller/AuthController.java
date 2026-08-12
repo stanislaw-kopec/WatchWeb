@@ -2,6 +2,7 @@ package com.watchweb.app.domain.auth.controller;
 
 import com.watchweb.app.domain.auth.dto.AuthResponse;
 import com.watchweb.app.domain.auth.dto.LoginRequest;
+import com.watchweb.app.domain.auth.dto.LogoutRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.dto.RegisterRequest;
 import com.watchweb.app.domain.auth.dto.RegisterResponse;
@@ -100,5 +101,25 @@ public class AuthController {
     })
     public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
         return authService.refresh(request);
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Logout user", description = "Revokes the provided refresh token.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Refresh token revoked"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid refresh token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public void logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request);
     }
 }

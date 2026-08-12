@@ -6,6 +6,7 @@ import com.watchweb.app.domain.article.repository.ArticleRepository;
 import com.watchweb.app.domain.article.service.ArticleService;
 import com.watchweb.app.domain.auth.dto.RegisterRequest;
 import com.watchweb.app.domain.auth.dto.LoginRequest;
+import com.watchweb.app.domain.auth.dto.LogoutRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.service.AuthService;
 import com.watchweb.app.domain.comment.dto.CreatePostCommentRequest;
@@ -247,6 +248,18 @@ class AppApplicationTests {
         assertThat(refreshResponse.accessToken()).isNotBlank();
         assertThat(refreshResponse.refreshToken()).isNotBlank();
         assertThat(refreshResponse.refreshToken()).isNotEqualTo(loginResponse.refreshToken());
+        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest(loginResponse.refreshToken())))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid refresh token");
+    }
+
+    @Test
+    void logsOutByRevokingRefreshToken() {
+        authService.register(new RegisterRequest("logoutuser", "logoutuser@example.com", "StrongPassword123"));
+        var loginResponse = authService.login(new LoginRequest("logoutuser@example.com", "StrongPassword123"));
+
+        authService.logout(new LogoutRequest(loginResponse.refreshToken()));
+
         assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest(loginResponse.refreshToken())))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid refresh token");

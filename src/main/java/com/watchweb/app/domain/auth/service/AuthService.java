@@ -2,6 +2,7 @@ package com.watchweb.app.domain.auth.service;
 
 import com.watchweb.app.domain.auth.dto.AuthResponse;
 import com.watchweb.app.domain.auth.dto.LoginRequest;
+import com.watchweb.app.domain.auth.dto.LogoutRequest;
 import com.watchweb.app.domain.auth.dto.RefreshTokenRequest;
 import com.watchweb.app.domain.auth.dto.RegisterRequest;
 import com.watchweb.app.domain.auth.dto.RegisterResponse;
@@ -78,6 +79,11 @@ public class AuthService {
     public AuthResponse refresh(RefreshTokenRequest request) {
         var user = refreshTokenService.consumeRefreshToken(request.refreshToken());
         return createAuthResponse(user);
+    }
+
+    @Transactional
+    public void logout(LogoutRequest request) {
+        refreshTokenService.revokeRefreshToken(request.refreshToken());
     }
 
     private AuthResponse createAuthResponse(User user) {

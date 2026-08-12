@@ -57,6 +57,19 @@ public class RefreshTokenService {
         return refreshToken.getUser();
     }
 
+    @Transactional
+    public void revokeRefreshToken(String rawToken) {
+        var now = Instant.now();
+        var refreshToken = refreshTokenRepository.findByTokenHash(hash(rawToken))
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid refresh token"));
+
+        if (!refreshToken.isActive(now)) {
+            throw new InvalidCredentialsException("Invalid refresh token");
+        }
+
+        refreshToken.revoke(now);
+    }
+
     private String generateRawToken() {
         var randomBytes = new byte[32];
         secureRandom.nextBytes(randomBytes);
