@@ -103,6 +103,11 @@ public class User {
         this.avatarUrl = avatarUrl;
     }
 
+    public void updateProfile(String username, String email) {
+        this.username = username;
+        this.email = email;
+    }
+
     public void updateRole(Role role) {
         this.role = role;
     }

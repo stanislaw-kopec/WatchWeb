@@ -26,6 +26,7 @@ import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
 import com.watchweb.app.domain.review.service.ReviewService;
+import com.watchweb.app.domain.user.dto.UpdateUserProfileRequest;
 import com.watchweb.app.domain.user.dto.UpdateUserRoleRequest;
 import com.watchweb.app.domain.user.entity.Role;
 import com.watchweb.app.domain.user.entity.User;
@@ -215,6 +216,49 @@ class AppApplicationTests {
         var filename = response.avatarUrl().substring(response.avatarUrl().lastIndexOf('/') + 1);
         var resource = storageService.load("avatars", filename);
         assertThat(resource.getInputStream().readAllBytes()).isEqualTo("avatar-content".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void updatesCurrentUserProfile() {
+        var user = authService.register(new RegisterRequest("profileuser", "profileuser@example.com", "StrongPassword123"));
+
+        var response = userService.updateProfile(
+                user.user().id(),
+                new UpdateUserProfileRequest("updatedprofile", "UPDATEDPROFILE@example.com")
+        );
+
+        assertThat(response.username()).isEqualTo("updatedprofile");
+        assertThat(response.email()).isEqualTo("updatedprofile@example.com");
+
+        var savedUser = userRepository.findById(user.user().id()).orElseThrow();
+        assertThat(savedUser.getUsername()).isEqualTo("updatedprofile");
+        assertThat(savedUser.getEmail()).isEqualTo("updatedprofile@example.com");
+    }
+
+    @Test
+    void rejectsUpdatingProfileToExistingUsername() {
+        authService.register(new RegisterRequest("existingprofileusername", "existingprofileusername@example.com", "StrongPassword123"));
+        var user = authService.register(new RegisterRequest("profileusernameowner", "profileusernameowner@example.com", "StrongPassword123"));
+
+        assertThatThrownBy(() -> userService.updateProfile(
+                user.user().id(),
+                new UpdateUserProfileRequest("existingprofileusername", "profileusernameowner@example.com")
+        ))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessage("Username is already taken");
+    }
+
+    @Test
+    void rejectsUpdatingProfileToExistingEmail() {
+        authService.register(new RegisterRequest("existingprofileemail", "existingprofileemail@example.com", "StrongPassword123"));
+        var user = authService.register(new RegisterRequest("profileemailowner", "profileemailowner@example.com", "StrongPassword123"));
+
+        assertThatThrownBy(() -> userService.updateProfile(
+                user.user().id(),
+                new UpdateUserProfileRequest("profileemailowner", "existingprofileemail@example.com")
+        ))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessage("Email is already taken");
     }
 
     @Test
