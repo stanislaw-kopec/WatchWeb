@@ -103,6 +103,10 @@ public class User {
         this.avatarUrl = avatarUrl;
     }
 
+    public void updateRole(Role role) {
+        this.role = role;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

@@ -24,9 +24,11 @@ import com.watchweb.app.domain.post.service.PostService;
 import com.watchweb.app.domain.review.dto.CreateReviewRequest;
 import com.watchweb.app.domain.review.dto.UpdateReviewRequest;
 import com.watchweb.app.domain.review.service.ReviewService;
+import com.watchweb.app.domain.user.dto.UpdateUserRoleRequest;
 import com.watchweb.app.domain.user.entity.Role;
 import com.watchweb.app.domain.user.entity.User;
 import com.watchweb.app.domain.user.repository.UserRepository;
+import com.watchweb.app.domain.user.service.UserAdminService;
 import com.watchweb.app.domain.user.service.UserService;
 import com.watchweb.app.domain.watch.dto.CreateWatchSubmissionRequest;
 import com.watchweb.app.domain.watch.dto.WatchDetailsRequest;
@@ -99,6 +101,9 @@ class AppApplicationTests {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserAdminService userAdminService;
 
     @Autowired
     private AuthService authService;
@@ -205,6 +210,57 @@ class AppApplicationTests {
         var filename = response.avatarUrl().substring(response.avatarUrl().lastIndexOf('/') + 1);
         var resource = storageService.load("avatars", filename);
         assertThat(resource.getInputStream().readAllBytes()).isEqualTo("avatar-content".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void adminListsUsers() {
+        var user = authService.register(new RegisterRequest("adminlisteduser", "adminlisteduser@example.com", "StrongPassword123"));
+
+        var page = userAdminService.list(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        assertThat(page.getContent())
+                .anySatisfy(response -> {
+                    assertThat(response.id()).isEqualTo(user.user().id());
+                    assertThat(response.username()).isEqualTo("adminlisteduser");
+                });
+    }
+
+    @Test
+    void adminUpdatesUserRole() {
+        var admin = userRepository.saveAndFlush(new User(
+                "roleadmin",
+                "roleadmin@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_ADMIN
+        ));
+        var user = authService.register(new RegisterRequest("promoteduser", "promoteduser@example.com", "StrongPassword123"));
+
+        var response = userAdminService.updateRole(
+                user.user().id(),
+                admin.getId(),
+                new UpdateUserRoleRequest(Role.ROLE_MODERATOR)
+        );
+
+        assertThat(response.role()).isEqualTo(Role.ROLE_MODERATOR);
+        assertThat(userRepository.findById(user.user().id()).orElseThrow().getRole()).isEqualTo(Role.ROLE_MODERATOR);
+    }
+
+    @Test
+    void rejectsRemovingOwnAdminRole() {
+        var admin = userRepository.saveAndFlush(new User(
+                "selfroleadmin",
+                "selfroleadmin@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_ADMIN
+        ));
+
+        assertThatThrownBy(() -> userAdminService.updateRole(
+                admin.getId(),
+                admin.getId(),
+                new UpdateUserRoleRequest(Role.ROLE_USER)
+        ))
+                .isInstanceOf(InvalidOperationException.class)
+                .hasMessage("Admin cannot remove their own admin role");
     }
 
     @Test
