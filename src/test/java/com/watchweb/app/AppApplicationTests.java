@@ -24,6 +24,7 @@ import com.watchweb.app.domain.review.service.ReviewService;
 import com.watchweb.app.domain.user.entity.Role;
 import com.watchweb.app.domain.user.entity.User;
 import com.watchweb.app.domain.user.repository.UserRepository;
+import com.watchweb.app.domain.user.service.UserService;
 import com.watchweb.app.domain.watch.dto.CreateWatchSubmissionRequest;
 import com.watchweb.app.domain.watch.dto.WatchDetailsRequest;
 import com.watchweb.app.domain.watch.entity.MovementType;
@@ -89,6 +90,9 @@ class AppApplicationTests {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private AuthService authService;
@@ -171,6 +175,27 @@ class AppApplicationTests {
         assertThat(response.user().email()).isEqualTo("kasia@example.com");
         assertThat(savedUser.getPasswordHash()).isNotEqualTo("StrongPassword123");
         assertThat(passwordEncoder.matches("StrongPassword123", savedUser.getPasswordHash())).isTrue();
+    }
+
+    @Test
+    void updatesCurrentUserAvatar() throws Exception {
+        var user = authService.register(new RegisterRequest("avataruser", "avataruser@example.com", "StrongPassword123"));
+        var file = new MockMultipartFile(
+                "file",
+                "avatar.png",
+                "image/png",
+                "avatar-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = userService.updateAvatar(user.user().id(), file);
+
+        assertThat(response.avatarUrl()).startsWith("/api/files/avatars/");
+        assertThat(response.avatarUrl()).endsWith(".png");
+        assertThat(userRepository.findById(user.user().id()).orElseThrow().getAvatarUrl()).isEqualTo(response.avatarUrl());
+
+        var filename = response.avatarUrl().substring(response.avatarUrl().lastIndexOf('/') + 1);
+        var resource = storageService.load("avatars", filename);
+        assertThat(resource.getInputStream().readAllBytes()).isEqualTo("avatar-content".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test

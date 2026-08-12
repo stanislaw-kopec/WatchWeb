@@ -3,6 +3,7 @@ package com.watchweb.app.domain.user.controller;
 import com.watchweb.app.domain.user.dto.UserResponse;
 import com.watchweb.app.exception.ApiErrorResponse;
 import com.watchweb.app.domain.user.service.UserService;
+import com.watchweb.app.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,10 +12,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -49,5 +55,54 @@ public class UserController {
             @PathVariable UUID id
     ) {
         return userService.getUser(id);
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Returns the authenticated user's profile.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Current user returned",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public UserResponse getCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return userService.getUser(principal.getId());
+    }
+
+    @PutMapping(path = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update current user avatar", description = "Uploads and assigns a JPG, PNG or WEBP avatar to the authenticated user.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Avatar updated",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid file",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public UserResponse updateAvatar(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Parameter(description = "Avatar image file", required = true)
+            @RequestPart("file") MultipartFile file
+    ) {
+        return userService.updateAvatar(principal.getId(), file);
     }
 }

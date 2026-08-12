@@ -21,6 +21,9 @@ public record UserResponse(
         @Schema(description = "User role", example = "ROLE_USER")
         Role role,
 
+        @Schema(description = "Public avatar URL")
+        String avatarUrl,
+
         @Schema(description = "Creation timestamp", example = "2026-08-11T18:30:00Z")
         Instant createdAt
 ) {
@@ -31,6 +34,7 @@ public record UserResponse(
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole(),
+                user.getAvatarUrl(),
                 user.getCreatedAt()
         );
     }

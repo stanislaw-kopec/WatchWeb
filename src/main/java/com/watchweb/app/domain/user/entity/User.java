@@ -36,6 +36,9 @@ public class User {
     @Column(nullable = false, length = 30)
     private Role role;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -84,12 +87,20 @@ public class User {
         return role;
     }
 
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void updateAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     @Override
