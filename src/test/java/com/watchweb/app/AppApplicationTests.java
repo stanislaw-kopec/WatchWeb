@@ -15,6 +15,8 @@ import com.watchweb.app.domain.comment.service.WatchCommentService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.entity.PostStatus;
+import com.watchweb.app.domain.post.event.PostApprovedEvent;
+import com.watchweb.app.domain.post.event.PostRejectedEvent;
 import com.watchweb.app.domain.post.repository.PostRepository;
 import com.watchweb.app.domain.post.service.PostModerationService;
 import com.watchweb.app.domain.post.service.PostService;
@@ -55,6 +57,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -70,6 +74,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Testcontainers
 @SpringBootTest
+@RecordApplicationEvents
 class AppApplicationTests {
 
     private static final Path TEST_STORAGE_PATH = Path.of("target", "test-storage").toAbsolutePath();
@@ -147,6 +152,9 @@ class AppApplicationTests {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private ApplicationEvents applicationEvents;
 
     @Test
     void contextLoads() {
@@ -686,6 +694,37 @@ class AppApplicationTests {
                 .allSatisfy(post -> assertThat(post.status()).isEqualTo(PostStatus.PENDING))
                 .anySatisfy(post -> assertThat(post.id()).isEqualTo(pendingPost.id()))
                 .noneSatisfy(post -> assertThat(post.id()).isEqualTo(approvedPost.id()));
+    }
+
+    @Test
+    void publishesPostApprovedEvent() {
+        var user = authService.register(new RegisterRequest("postapprovedevent", "postapprovedevent@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Approved event", "Author should be notified."));
+
+        postModerationService.approve(post.id());
+
+        var events = applicationEvents.stream(PostApprovedEvent.class).toList();
+        assertThat(events).hasSize(1);
+        var event = events.getFirst();
+        assertThat(event.postId()).isEqualTo(post.id());
+        assertThat(event.authorId()).isEqualTo(user.user().id());
+        assertThat(event.title()).isEqualTo("Approved event");
+    }
+
+    @Test
+    void publishesPostRejectedEvent() {
+        var user = authService.register(new RegisterRequest("postrejectedevent", "postrejectedevent@example.com", "StrongPassword123"));
+        var post = postService.create(user.user().id(), new CreatePostRequest("Rejected event", "Author should see the reason."));
+
+        postModerationService.reject(post.id(), "  Needs more detail.  ");
+
+        var events = applicationEvents.stream(PostRejectedEvent.class).toList();
+        assertThat(events).hasSize(1);
+        var event = events.getFirst();
+        assertThat(event.postId()).isEqualTo(post.id());
+        assertThat(event.authorId()).isEqualTo(user.user().id());
+        assertThat(event.title()).isEqualTo("Rejected event");
+        assertThat(event.reason()).isEqualTo("Needs more detail.");
     }
 
     @Test
