@@ -1,7 +1,9 @@
 import { ArrowRight, MessageSquareText, ShieldCheck, Star, Watch } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { WatchCatalogPreview } from '@/entities/watch/ui/WatchCatalogPreview'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
 const highlights = [
@@ -42,13 +44,12 @@ export function HomePage() {
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
-              href="/api/watches"
-            >
-              Dane katalogu
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </a>
+            <Button asChild>
+              <Link to="/watches">
+                Katalog zegarków
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
             <a
               className="inline-flex h-10 items-center rounded-md border border-input bg-card px-4 text-sm font-medium text-foreground transition hover:bg-secondary"
               href="/swagger-ui.html"
@@ -84,7 +85,7 @@ export function HomePage() {
         <CardContent>
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
             <p>Logowanie i sesja JWT z odświeżaniem tokenów.</p>
-            <p>Widok listy zegarków z filtrami zgodnymi z API.</p>
+            <p>Szczegóły zegarka z recenzjami i komentarzami.</p>
             <p>Formularze zgłoszeń i moderacji oparte na Zod.</p>
           </div>
         </CardContent>

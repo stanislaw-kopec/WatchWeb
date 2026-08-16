@@ -62,6 +62,24 @@ export function AppShell() {
               <UserCircle className="size-5" aria-hidden="true" />
             </Button>
           </div>
+
+          <nav className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto lg:hidden" aria-label="Nawigacja">
+            {navigation.map((item) => (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                className={({ isActive }) =>
+                  cn(
+                    'flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-secondary-foreground',
+                    isActive && 'bg-secondary text-secondary-foreground',
+                  )
+                }
+              >
+                <item.icon className="size-4" aria-hidden="true" />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
         </header>
 
         <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
