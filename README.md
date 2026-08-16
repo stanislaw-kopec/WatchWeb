@@ -36,17 +36,21 @@ docs/      dokumentacja projektu
 
 ## Uruchomienie
 
-Najprostszy sposob uruchomienia backendu z baza przez Docker Compose:
+Najprostszy sposob uruchomienia calej aplikacji przez Docker Compose:
 
 ```powershell
 docker compose up --build
 ```
 
-Po starcie aplikacji Swagger UI jest dostepny pod:
+Po starcie aplikacji dostepne sa:
 
 ```text
-http://localhost:8081/swagger-ui.html
+Frontend:   http://localhost:3000
+Swagger UI: http://localhost:8081/swagger-ui.html
+pgAdmin:    http://localhost:5050
 ```
+
+Kontener frontendu przekazuje zapytania `http://localhost:3000/api/...` do backendu.
 
 ## Utworzenie frontendu
 
@@ -59,7 +63,7 @@ npm install
 npm run dev
 ```
 
-Po utworzeniu projektu React dodamy osobny serwis `frontend` do `docker-compose.yml`.
+W Docker Compose frontend jest budowany jako statyczna aplikacja i serwowany przez Nginx.
 
 ## Dane startowe
 
