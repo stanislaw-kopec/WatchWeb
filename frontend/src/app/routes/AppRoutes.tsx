@@ -18,6 +18,7 @@ import { PostCreatePage } from '@/pages/post-create/PostCreatePage'
 import { PostDetailsPage } from '@/pages/post-details/PostDetailsPage'
 import { PostsPage } from '@/pages/posts/PostsPage'
 import { ProfilePage } from '@/pages/profile/ProfilePage'
+import { SearchPage } from '@/pages/search/SearchPage'
 import { UserProfilePage } from '@/pages/user-profile/UserProfilePage'
 import { WatchSubmissionModerationPage } from '@/pages/watch-submission-moderation/WatchSubmissionModerationPage'
 import { WatchDetailsPage } from '@/pages/watch-details/WatchDetailsPage'
@@ -117,6 +118,7 @@ export function AppRoutes() {
           }
         />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="search" element={<SearchPage />} />
         <Route
           path="users/:userId"
           element={

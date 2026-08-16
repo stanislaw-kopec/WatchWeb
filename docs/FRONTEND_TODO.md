@@ -123,9 +123,9 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Wyszukiwanie globalne
 
-- [ ] Podlaczenie pola wyszukiwania w headerze.
-- [ ] Ustalic zakres wyszukiwania: zegarki, artykuly, posty, hashtagi.
-- [ ] Widok wynikow wyszukiwania albo szybkie sugestie.
+- [x] Podlaczenie pola wyszukiwania w headerze.
+- [x] Ustalic zakres wyszukiwania: zegarki po marce, artykuly, posty, hashtagi.
+- [x] Widok wynikow wyszukiwania albo szybkie sugestie.
 
 ### Jakosc frontendu
 

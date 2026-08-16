@@ -11,7 +11,8 @@ import {
   UserPlus,
   Watch,
 } from 'lucide-react'
-import { Link, NavLink, Outlet } from 'react-router'
+import type { FormEvent } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 
 import type { UserRole } from '@/entities/user/model/types'
 import { USER_ROLE_LABELS } from '@/features/auth/model/roleLabels'
@@ -75,14 +76,7 @@ export function AppShell() {
       <div className="min-w-0">
         <header className="sticky top-0 z-20 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:px-8">
           <div className="mx-auto flex max-w-7xl items-center gap-3">
-            <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-md border border-input bg-card px-3 text-muted-foreground">
-              <Search className="size-4 shrink-0" aria-hidden="true" />
-              <input
-                className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                placeholder="Szukaj zegarków, marek, postów i artykułów"
-                type="search"
-              />
-            </div>
+            <HeaderSearchForm />
             {isAuthenticated && user ? (
               <>
                 <NotificationBellButton enabled={isAuthenticated} />
@@ -147,4 +141,42 @@ export function AppShell() {
 
 function canSeeNavigationItem(item: NavigationItem, role: UserRole | undefined) {
   return !item.allowedRoles || (role ? item.allowedRoles.includes(role) : false)
+}
+
+function HeaderSearchForm() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const currentSearchQuery = location.pathname === '/search' ? searchParams.get('query') ?? '' : ''
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+    const query = String(formData.get('query') ?? '').trim()
+
+    navigate(query ? `/search?query=${encodeURIComponent(query)}` : '/search')
+  }
+
+  return (
+    <form
+      className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-md border border-input bg-card px-3 text-muted-foreground"
+      key={currentSearchQuery}
+      onSubmit={handleSubmit}
+    >
+      <Search className="size-4 shrink-0" aria-hidden="true" />
+      <label className="sr-only" htmlFor="global-search">
+        Szukaj
+      </label>
+      <input
+        autoComplete="off"
+        className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+        defaultValue={currentSearchQuery}
+        id="global-search"
+        name="query"
+        placeholder="Szukaj zegarków, postów, artykułów i hashtagów"
+        type="search"
+      />
+    </form>
+  )
 }
