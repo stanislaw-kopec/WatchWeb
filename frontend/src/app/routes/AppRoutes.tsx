@@ -9,6 +9,7 @@ import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { ModerationPage } from '@/pages/moderation/ModerationPage'
 import { MyPostsPage } from '@/pages/my-posts/MyPostsPage'
+import { MyWatchSubmissionsPage } from '@/pages/my-watch-submissions/MyWatchSubmissionsPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
 import { PostCreatePage } from '@/pages/post-create/PostCreatePage'
 import { PostDetailsPage } from '@/pages/post-details/PostDetailsPage'
@@ -16,6 +17,7 @@ import { PostsPage } from '@/pages/posts/PostsPage'
 import { ProfilePage } from '@/pages/profile/ProfilePage'
 import { WatchSubmissionModerationPage } from '@/pages/watch-submission-moderation/WatchSubmissionModerationPage'
 import { WatchDetailsPage } from '@/pages/watch-details/WatchDetailsPage'
+import { WatchSubmitPage } from '@/pages/watch-submit/WatchSubmitPage'
 import { WatchesPage } from '@/pages/watches/WatchesPage'
 import { RequireAuth } from '@/features/auth/ui/RequireAuth'
 import { RequireRole } from '@/features/auth/ui/RequireRole'
@@ -78,8 +80,24 @@ export function AppRoutes() {
             </RequireAuth>
           }
         />
+        <Route
+          path="me/watch-submissions"
+          element={
+            <RequireAuth>
+              <MyWatchSubmissionsPage />
+            </RequireAuth>
+          }
+        />
         <Route path="register" element={<RegisterPage />} />
         <Route path="watches" element={<WatchesPage />} />
+        <Route
+          path="watches/submit"
+          element={
+            <RequireAuth>
+              <WatchSubmitPage />
+            </RequireAuth>
+          }
+        />
         <Route path="watches/:watchId" element={<WatchDetailsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

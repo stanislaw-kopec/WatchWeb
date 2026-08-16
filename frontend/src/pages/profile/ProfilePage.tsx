@@ -7,6 +7,7 @@ import {
   RefreshCw,
   ShieldCheck,
   UserCircle,
+  Watch,
 } from 'lucide-react'
 import { Link } from 'react-router'
 
@@ -128,6 +129,26 @@ export function ProfilePage() {
               <Link to="/me/posts">
                 <ListChecks className="size-4" aria-hidden="true" />
                 Moje posty
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Katalog</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button asChild className="w-full">
+              <Link to="/watches/submit">
+                <Watch className="size-4" aria-hidden="true" />
+                Zgłoś zegarek
+              </Link>
+            </Button>
+            <Button asChild className="w-full" variant="outline">
+              <Link to="/me/watch-submissions">
+                <ListChecks className="size-4" aria-hidden="true" />
+                Moje zgłoszenia
               </Link>
             </Button>
           </CardContent>

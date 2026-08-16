@@ -26,3 +26,15 @@ export type WatchSubmissionResponse = {
   message: string
   createdAt: string
 }
+
+export type UserWatchSubmission = {
+  id: string
+  brand: string
+  model: string
+  referenceCode: string | null
+  details: WatchDetails | null
+  status: WatchSubmissionStatus
+  rejectionReason: string | null
+  createdAt: string
+  updatedAt: string
+}

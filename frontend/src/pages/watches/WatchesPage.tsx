@@ -1,10 +1,11 @@
-import { AlertCircle, RefreshCw, Star, Watch, Waves } from 'lucide-react'
+import { AlertCircle, ListChecks, PlusCircle, RefreshCw, Star, Watch, Waves } from 'lucide-react'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import { useWatches } from '@/entities/watch/api/useWatches'
 import type { Watch as WatchModel } from '@/entities/watch/model/types'
 import { WatchCard } from '@/entities/watch/ui/WatchCard'
+import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import {
   buildWatchCatalogSearchParams,
   countActiveWatchCatalogFilters,
@@ -20,6 +21,10 @@ import { Pagination } from '@/shared/ui/pagination'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function WatchesPage() {
+  const { isAuthenticated } = useAuthSession()
+  const submitWatchPath = isAuthenticated
+    ? '/watches/submit'
+    : `/login?redirectTo=${encodeURIComponent('/watches/submit')}`
   const [searchParams, setSearchParams] = useSearchParams()
   const searchState = useMemo(() => parseWatchCatalogSearchParams(searchParams), [searchParams])
   const listParams = useMemo(() => toWatchListParams(searchState), [searchState])
@@ -58,6 +63,22 @@ export function WatchesPage() {
               Dane są pobierane z backendu i pokazują pełniejszą skalę aplikacji: katalog,
               recenzje, parametry techniczne oraz ocenę społeczności.
             </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button asChild>
+                <Link to={submitWatchPath}>
+                  <PlusCircle className="size-4" aria-hidden="true" />
+                  Zgłoś zegarek
+                </Link>
+              </Button>
+              {isAuthenticated ? (
+                <Button asChild variant="outline">
+                  <Link to="/me/watch-submissions">
+                    <ListChecks className="size-4" aria-hidden="true" />
+                    Moje zgłoszenia
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
         </div>
 

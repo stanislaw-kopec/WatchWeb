@@ -45,13 +45,13 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Zgloszenia zegarkow do katalogu
 
-- [ ] Encja/API frontendu dla zgloszen zegarkow.
-- [ ] Formularz zgloszenia zegarka.
-- [ ] Pola podstawowe: marka, model, kod referencyjny.
-- [ ] Pola techniczne: typ mechanizmu, kaliber, srednica, grubosc, lug-to-lug, szerokosc paska, wodoszczelnosc, szklo, material koperty.
-- [ ] Widok "moje zgloszenia zegarkow".
-- [ ] Filtrowanie moich zgloszen po statusie.
-- [ ] Pokazanie powodu odrzucenia zgloszenia.
+- [x] Encja/API frontendu dla zgloszen zegarkow.
+- [x] Formularz zgloszenia zegarka.
+- [x] Pola podstawowe: marka, model, kod referencyjny.
+- [x] Pola techniczne: typ mechanizmu, kaliber, srednica, grubosc, lug-to-lug, szerokosc paska, wodoszczelnosc, szklo, material koperty.
+- [x] Widok "moje zgloszenia zegarkow".
+- [x] Filtrowanie moich zgloszen po statusie.
+- [x] Pokazanie powodu odrzucenia zgloszenia.
 
 ### Moderacja
 
