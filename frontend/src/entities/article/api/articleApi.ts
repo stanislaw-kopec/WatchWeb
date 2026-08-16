@@ -9,6 +9,13 @@ export type ArticleListParams = {
   sort?: string
 }
 
+export type CreateArticleRequest = {
+  title: string
+  content: string
+}
+
+export type UpdateArticleRequest = CreateArticleRequest
+
 export function getArticles(params: ArticleListParams = {}) {
   const searchParams = new URLSearchParams()
 
@@ -25,4 +32,34 @@ export function getArticles(params: ArticleListParams = {}) {
 
 export function getArticle(articleId: string) {
   return httpClient<Article>(`/api/articles/${articleId}`)
+}
+
+export function createArticle(request: CreateArticleRequest) {
+  return httpClient<Article>('/api/articles', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
+export function updateArticle(articleId: string, request: UpdateArticleRequest) {
+  return httpClient<Article>(`/api/articles/${articleId}`, {
+    method: 'PUT',
+    body: JSON.stringify(request),
+  })
+}
+
+export function updateArticleHeaderImage(articleId: string, file: File) {
+  const formData = new FormData()
+  formData.set('file', file)
+
+  return httpClient<Article>(`/api/articles/${articleId}/header-image`, {
+    method: 'PUT',
+    body: formData,
+  })
+}
+
+export function deleteArticle(articleId: string) {
+  return httpClient<void>(`/api/articles/${articleId}`, {
+    method: 'DELETE',
+  })
 }

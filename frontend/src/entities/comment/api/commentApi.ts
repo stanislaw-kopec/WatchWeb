@@ -22,6 +22,12 @@ export function createWatchComment(watchId: string, request: CreateWatchCommentR
   })
 }
 
+export function deleteWatchComment(watchId: string, commentId: string) {
+  return httpClient<void>(`/api/watches/${watchId}/comments/${commentId}`, {
+    method: 'DELETE',
+  })
+}
+
 export function getPostComments(postId: string) {
   return httpClient<PostComment[]>(`/api/posts/${postId}/comments`)
 }
@@ -30,5 +36,11 @@ export function createPostComment(postId: string, request: CreatePostCommentRequ
   return httpClient<PostComment>(`/api/posts/${postId}/comments`, {
     method: 'POST',
     body: JSON.stringify(request),
+  })
+}
+
+export function deletePostComment(postId: string, commentId: string) {
+  return httpClient<void>(`/api/posts/${postId}/comments/${commentId}`, {
+    method: 'DELETE',
   })
 }

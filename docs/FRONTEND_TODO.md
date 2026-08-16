@@ -41,7 +41,7 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 - [x] Upload zdjecia do posta.
 - [x] Lista komentarzy pod postem.
 - [x] Dodawanie komentarza i odpowiedzi pod postem.
-- [ ] Usuwanie komentarzy pod postem.
+- [x] Usuwanie komentarzy pod postem.
 
 ### Zgloszenia zegarkow do katalogu
 
@@ -85,9 +85,9 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Komentarze pod zegarkami
 
-- [ ] Usuwanie wlasnych komentarzy pod zegarkiem.
-- [ ] Usuwanie komentarzy przez moderatora/admina.
-- [ ] Lepszy komunikat przy osiagnieciu maksymalnej glebokosci odpowiedzi.
+- [x] Usuwanie wlasnych komentarzy pod zegarkiem.
+- [x] Usuwanie komentarzy przez moderatora/admina.
+- [x] Lepszy komunikat przy osiagnieciu maksymalnej glebokosci odpowiedzi.
 
 ### Powiadomienia
 
@@ -99,11 +99,11 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Artykuly
 
-- [ ] Tworzenie artykulu dla `ROLE_JOURNALIST` i `ROLE_ADMIN`.
-- [ ] Edycja artykulu.
-- [ ] Usuwanie artykulu.
-- [ ] Upload obrazka naglowkowego artykulu.
-- [ ] Ograniczenie widocznosci akcji artykulow wedlug roli.
+- [x] Tworzenie artykulu dla `ROLE_JOURNALIST` i `ROLE_ADMIN`.
+- [x] Edycja artykulu.
+- [x] Usuwanie artykulu.
+- [x] Upload obrazka naglowkowego artykulu.
+- [x] Ograniczenie widocznosci akcji artykulow wedlug roli.
 
 ## Nizszy priorytet / dopracowanie
 

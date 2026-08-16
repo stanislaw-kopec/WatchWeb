@@ -4,6 +4,9 @@ import { Link, useParams } from 'react-router'
 import { useArticle } from '@/entities/article/api/useArticles'
 import { countWords, estimateReadingTime } from '@/entities/article/model/readingTime'
 import { ArticleHeroVisual } from '@/entities/article/ui/ArticleHeroVisual'
+import type { User } from '@/entities/user/model/types'
+import { ArticleActions } from '@/features/article-manage/ui/ArticleActions'
+import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { formatDateTime } from '@/shared/lib/date'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -13,6 +16,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 export function ArticleDetailsPage() {
   const { articleId } = useParams()
   const articleQuery = useArticle(articleId)
+  const { user } = useAuthSession()
 
   if (articleQuery.isLoading) {
     return <ArticleDetailsSkeleton />
@@ -37,6 +41,7 @@ export function ArticleDetailsPage() {
   }
 
   const article = articleQuery.data
+  const canManageArticle = user ? canManageArticleForUser(article, user) : false
 
   return (
     <div className="space-y-6">
@@ -97,6 +102,16 @@ export function ArticleDetailsPage() {
               </p>
             </CardContent>
           </Card>
+          {canManageArticle ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Zarządzanie</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ArticleActions article={article} />
+              </CardContent>
+            </Card>
+          ) : null}
         </aside>
       </section>
     </div>
@@ -151,4 +166,8 @@ function getLead(content: string) {
   const firstParagraph = getParagraphs(content)[0] ?? content
 
   return firstParagraph.length > 220 ? `${firstParagraph.slice(0, 217).trim()}...` : firstParagraph
+}
+
+function canManageArticleForUser(article: { authorId: string }, user: User) {
+  return user.role === 'ROLE_ADMIN' || (user.role === 'ROLE_JOURNALIST' && article.authorId === user.id)
 }

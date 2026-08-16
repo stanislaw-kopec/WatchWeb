@@ -1,6 +1,6 @@
-import { AlertCircle, BookOpenText, Newspaper, RefreshCw, Search, UserRound } from 'lucide-react'
+import { AlertCircle, BookOpenText, Newspaper, Plus, RefreshCw, Search, UserRound } from 'lucide-react'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import { useArticles } from '@/entities/article/api/useArticles'
 import type { Article } from '@/entities/article/model/types'
@@ -13,6 +13,7 @@ import {
 } from '@/features/article-list/model/articleListFilters'
 import type { ArticleListFilters as ArticleListFiltersValue } from '@/features/article-list/model/articleListFilters'
 import { ArticleListFilters } from '@/features/article-list/ui/ArticleListFilters'
+import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -21,12 +22,14 @@ import { Skeleton } from '@/shared/ui/skeleton'
 
 export function ArticlesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user } = useAuthSession()
   const searchState = useMemo(() => parseArticleListSearchParams(searchParams), [searchParams])
   const listParams = useMemo(() => toArticleListParams(searchState), [searchState])
   const articlesQuery = useArticles(listParams)
   const articles = articlesQuery.data?.content ?? []
   const activeFiltersCount = countActiveArticleFilters(searchState)
   const visibleStats = getVisibleStats(articles)
+  const canCreateArticle = user?.role === 'ROLE_JOURNALIST' || user?.role === 'ROLE_ADMIN'
 
   function applyFilters(filters: ArticleListFiltersValue, pageSize: number) {
     setSearchParams(buildArticleListSearchParams(filters, 0, pageSize))
@@ -88,15 +91,25 @@ export function ArticlesPage() {
                 : 'Ładowanie artykułów'}
             </p>
           </div>
-          <Button
-            disabled={articlesQuery.isFetching}
-            onClick={() => void articlesQuery.refetch()}
-            type="button"
-            variant="outline"
-          >
-            <RefreshCw className="size-4" aria-hidden="true" />
-            Odśwież
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {canCreateArticle ? (
+              <Button asChild>
+                <Link to="/articles/new">
+                  <Plus className="size-4" aria-hidden="true" />
+                  Nowy artykuł
+                </Link>
+              </Button>
+            ) : null}
+            <Button
+              disabled={articlesQuery.isFetching}
+              onClick={() => void articlesQuery.refetch()}
+              type="button"
+              variant="outline"
+            >
+              <RefreshCw className="size-4" aria-hidden="true" />
+              Odśwież
+            </Button>
+          </div>
         </div>
 
         {articlesQuery.isLoading ? <ArticleListSkeleton /> : null}

@@ -3,7 +3,9 @@ import { useState } from 'react'
 
 import type { WatchComment } from '@/entities/comment/model/types'
 import { WatchCommentTree } from '@/entities/comment/ui/WatchCommentTree'
+import type { User } from '@/entities/user/model/types'
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
+import { CommentDeleteAction } from '@/features/comment-create/ui/CommentDeleteAction'
 import { CreateWatchCommentForm } from '@/features/comment-create/ui/CreateWatchCommentForm'
 import { Button } from '@/shared/ui/button'
 
@@ -16,7 +18,7 @@ type WatchCommentSectionProps = {
 
 export function WatchCommentSection({ watchId, comments }: WatchCommentSectionProps) {
   const [replyCommentId, setReplyCommentId] = useState<string | null>(null)
-  const { isAuthenticated } = useAuthSession()
+  const { isAuthenticated, user } = useAuthSession()
 
   return (
     <div className="space-y-4">
@@ -24,26 +26,40 @@ export function WatchCommentSection({ watchId, comments }: WatchCommentSectionPr
       <WatchCommentTree
         comments={comments}
         renderActions={(comment) => {
-          if (!isAuthenticated || comment.deleted || comment.depth >= MAX_COMMENT_DEPTH) {
+          if (!isAuthenticated || comment.deleted) {
             return null
           }
 
+          const canReply = comment.depth < MAX_COMMENT_DEPTH
+          const canDelete = user ? canDeleteComment(comment, user) : false
           const isReplying = replyCommentId === comment.id
 
           return (
-            <Button
-              onClick={() => setReplyCommentId(isReplying ? null : comment.id)}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              {isReplying ? (
-                <X className="size-4" aria-hidden="true" />
+            <div className="flex flex-wrap items-center gap-2">
+              {canReply ? (
+                <Button
+                  onClick={() => setReplyCommentId(isReplying ? null : comment.id)}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  {isReplying ? (
+                    <X className="size-4" aria-hidden="true" />
+                  ) : (
+                    <MessageSquareReply className="size-4" aria-hidden="true" />
+                  )}
+                  {isReplying ? 'Zamknij' : 'Odpowiedz'}
+                </Button>
               ) : (
-                <MessageSquareReply className="size-4" aria-hidden="true" />
+                <span className="text-xs text-muted-foreground">Limit odpowiedzi</span>
               )}
-              {isReplying ? 'Zamknij' : 'Odpowiedz'}
-            </Button>
+              {canDelete ? (
+                <CommentDeleteAction
+                  commentId={comment.id}
+                  target={{ type: 'watch', resourceId: watchId }}
+                />
+              ) : null}
+            </div>
           )
         }}
         renderReplyForm={(comment) =>
@@ -62,4 +78,8 @@ export function WatchCommentSection({ watchId, comments }: WatchCommentSectionPr
       />
     </div>
   )
+}
+
+function canDeleteComment(comment: WatchComment, user: User) {
+  return comment.authorId === user.id || user.role === 'ROLE_MODERATOR' || user.role === 'ROLE_ADMIN'
 }
