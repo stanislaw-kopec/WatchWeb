@@ -91,11 +91,11 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Powiadomienia
 
-- [ ] Encja/API frontendu dla powiadomien.
-- [ ] Lista powiadomien zalogowanego uzytkownika.
-- [ ] Badge/licznik nieprzeczytanych powiadomien przy ikonie dzwonka.
-- [ ] Oznaczanie powiadomienia jako przeczytane.
-- [ ] Linkowanie powiadomien do zasobu, np. posta albo zgloszenia zegarka.
+- [x] Encja/API frontendu dla powiadomien.
+- [x] Lista powiadomien zalogowanego uzytkownika.
+- [x] Badge/licznik nieprzeczytanych powiadomien przy ikonie dzwonka.
+- [x] Oznaczanie powiadomienia jako przeczytane.
+- [x] Linkowanie powiadomien do zasobu, np. posta albo zgloszenia zegarka.
 
 ### Artykuly
 

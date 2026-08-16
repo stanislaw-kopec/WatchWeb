@@ -11,6 +11,7 @@ import { ModerationPage } from '@/pages/moderation/ModerationPage'
 import { MyPostsPage } from '@/pages/my-posts/MyPostsPage'
 import { MyWatchSubmissionsPage } from '@/pages/my-watch-submissions/MyWatchSubmissionsPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
+import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { PostCreatePage } from '@/pages/post-create/PostCreatePage'
 import { PostDetailsPage } from '@/pages/post-details/PostDetailsPage'
 import { PostsPage } from '@/pages/posts/PostsPage'
@@ -86,6 +87,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <MyWatchSubmissionsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="notifications"
+          element={
+            <RequireAuth>
+              <NotificationsPage />
             </RequireAuth>
           }
         />

@@ -262,10 +262,13 @@ class PostIntegrationTest extends AbstractIntegrationTest {
         postModerationService.approve(post.id());
         var notification = notificationService.list(user.user().id(), PageRequest.of(0, 20)).getContent().getFirst();
 
+        assertThat(notificationService.countUnread(user.user().id())).isEqualTo(1);
+
         var response = notificationService.markAsRead(notification.id(), user.user().id());
 
         assertThat(response.read()).isTrue();
         assertThat(response.readAt()).isNotNull();
+        assertThat(notificationService.countUnread(user.user().id())).isZero();
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.watchweb.app.domain.notification.controller;
 
 import com.watchweb.app.domain.notification.dto.NotificationResponse;
+import com.watchweb.app.domain.notification.dto.UnreadNotificationCountResponse;
 import com.watchweb.app.domain.notification.service.NotificationService;
 import com.watchweb.app.exception.ApiErrorResponse;
 import com.watchweb.app.security.UserPrincipal;
@@ -57,6 +58,26 @@ public class NotificationController {
             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return notificationService.list(principal.getId(), pageable);
+    }
+
+    @GetMapping("/unread-count")
+    @Operation(summary = "Count unread notifications", description = "Returns the authenticated user's unread notification count.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Unread notifications counted",
+                    content = @Content(schema = @Schema(implementation = UnreadNotificationCountResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing or invalid access token",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public UnreadNotificationCountResponse countUnread(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return new UnreadNotificationCountResponse(notificationService.countUnread(principal.getId()));
     }
 
     @PatchMapping("/{id}/read")

@@ -1,5 +1,4 @@
 import {
-  Bell,
   Compass,
   LogIn,
   LogOut,
@@ -17,6 +16,7 @@ import { Link, NavLink, Outlet } from 'react-router'
 import type { UserRole } from '@/entities/user/model/types'
 import { USER_ROLE_LABELS } from '@/features/auth/model/roleLabels'
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
+import { NotificationBellButton } from '@/features/notification-list/ui/NotificationBellButton'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 
@@ -83,11 +83,9 @@ export function AppShell() {
                 type="search"
               />
             </div>
-            <Button variant="ghost" size="icon" aria-label="Powiadomienia">
-              <Bell className="size-4" aria-hidden="true" />
-            </Button>
             {isAuthenticated && user ? (
               <>
+                <NotificationBellButton enabled={isAuthenticated} />
                 <Link
                   className="hidden min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 transition hover:bg-secondary sm:flex"
                   to="/me"

@@ -31,6 +31,11 @@ public class NotificationService {
                 .map(NotificationResponse::fromEntity);
     }
 
+    @Transactional(readOnly = true)
+    public long countUnread(UUID recipientId) {
+        return notificationRepository.countByRecipientIdAndReadAtIsNull(recipientId);
+    }
+
     @Transactional
     public NotificationResponse markAsRead(UUID notificationId, UUID recipientId) {
         var notification = notificationRepository.findByIdAndRecipientId(notificationId, recipientId)
