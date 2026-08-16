@@ -1,6 +1,6 @@
 # WatchWeb
 
-Backend aplikacji dla pasjonatow zegarkow, napisany w Javie 25 i Spring Boot.
+Full-stack aplikacji dla pasjonatow zegarkow.
 
 Projekt laczy:
 
@@ -11,8 +11,8 @@ Projekt laczy:
 
 ## Glowne zalozenia
 
-* Java 25 jako docelowa wersja jezyka i runtime.
-* Spring Boot 4.1.x jako glowny framework aplikacyjny.
+* Backend: Java 25, Spring Boot 4.1.x.
+* Frontend: React w osobnym katalogu `frontend/`.
 * Architektura package-by-feature pod domenami biznesowymi.
 * REST API zabezpieczone przez Spring Security, JWT i refresh tokeny.
 * Dokumentacja REST API przez OpenAPI 3 i Swagger UI.
@@ -26,9 +26,17 @@ Szczegolowe wymagania projektowe znajduja sie w [docs/PROJECT.md](docs/PROJECT.m
 
 Zasady pracy nad kodem i konwencje architektoniczne sa opisane w [AGENTS.md](AGENTS.md).
 
+## Struktura repozytorium
+
+```text
+backend/   Spring Boot API
+frontend/  React UI
+docs/      dokumentacja projektu
+```
+
 ## Uruchomienie
 
-Najprostszy sposob uruchomienia calego backendu z baza:
+Najprostszy sposob uruchomienia backendu z baza przez Docker Compose:
 
 ```powershell
 docker compose up --build
@@ -39,6 +47,19 @@ Po starcie aplikacji Swagger UI jest dostepny pod:
 ```text
 http://localhost:8081/swagger-ui.html
 ```
+
+## Utworzenie frontendu
+
+Projekt React najlepiej utworzyc przez Vite:
+
+```powershell
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install
+npm run dev
+```
+
+Po utworzeniu projektu React dodamy osobny serwis `frontend` do `docker-compose.yml`.
 
 ## Dane startowe
 

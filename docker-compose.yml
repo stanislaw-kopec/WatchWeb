@@ -1,9 +1,9 @@
 services:
-  app:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: watchweb-app
+    container_name: watchweb-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/watchweb
       SPRING_DATASOURCE_USERNAME: postgres
@@ -28,7 +28,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
