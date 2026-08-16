@@ -1,8 +1,10 @@
-import { Gauge, Ruler, Star, Waves } from 'lucide-react'
+import { ArrowRight, Gauge, Ruler, Star, Waves } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { formatMovementType } from '@/entities/watch/model/movementType'
 import type { Watch } from '@/entities/watch/model/types'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
 type WatchCardProps = {
@@ -23,7 +25,11 @@ export function WatchCard({ watch }: WatchCardProps) {
             <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {watch.brand}
             </p>
-            <CardTitle className="mt-1 line-clamp-2">{watch.model}</CardTitle>
+            <CardTitle className="mt-1 line-clamp-2">
+              <Link className="hover:text-primary" to={`/watches/${watch.id}`}>
+                {watch.model}
+              </Link>
+            </CardTitle>
           </div>
           <Badge className="shrink-0" variant="outline">
             {formatMovementType(movementType)}
@@ -49,6 +55,13 @@ export function WatchCard({ watch }: WatchCardProps) {
           </div>
           <p className="text-sm text-muted-foreground">{watch.reviewsCount} recenzji</p>
         </div>
+
+        <Button asChild className="w-full" variant="outline">
+          <Link to={`/watches/${watch.id}`}>
+            Szczegóły
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   )

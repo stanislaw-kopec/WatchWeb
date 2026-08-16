@@ -26,3 +26,7 @@ export function getWatches(params: WatchListParams = {}) {
 
   return httpClient<PageResponse<Watch>>(`/api/watches${query ? `?${query}` : ''}`)
 }
+
+export function getWatch(watchId: string) {
+  return httpClient<Watch>(`/api/watches/${watchId}`)
+}
