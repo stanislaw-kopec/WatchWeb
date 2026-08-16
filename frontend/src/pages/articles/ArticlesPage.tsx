@@ -1,4 +1,4 @@
-import { AlertCircle, BookOpenText, Newspaper, Plus, RefreshCw, Search, UserRound } from 'lucide-react'
+import { BookOpenText, Newspaper, Plus, RefreshCw, Search, UserRound } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
@@ -16,7 +16,8 @@ import { ArticleListFilters } from '@/features/article-list/ui/ArticleListFilter
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Pagination } from '@/shared/ui/pagination'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -115,29 +116,19 @@ export function ArticlesPage() {
         {articlesQuery.isLoading ? <ArticleListSkeleton /> : null}
 
         {articlesQuery.isError ? (
-          <Card className="border-destructive/40">
-            <CardHeader className="flex-row items-start gap-3 space-y-0">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-                <AlertCircle className="size-5" aria-hidden="true" />
-              </div>
-              <div>
-                <CardTitle>Nie udało się pobrać artykułów</CardTitle>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {articlesQuery.error instanceof Error
-                    ? articlesQuery.error.message
-                    : 'Spróbuj zmienić filtry albo odświeżyć dane.'}
-                </p>
-              </div>
-            </CardHeader>
-          </Card>
+          <ErrorState
+            description="Sprawdź połączenie i spróbuj ponownie za chwilę."
+            isRetrying={articlesQuery.isFetching}
+            onRetry={() => void articlesQuery.refetch()}
+            title="Nie udało się pobrać artykułów"
+          />
         ) : null}
 
         {articlesQuery.isSuccess && articles.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Brak artykułów dla wybranej frazy.
-            </CardContent>
-          </Card>
+          <EmptyState
+            description="Wyczyść wyszukiwanie albo spróbuj użyć innej frazy."
+            title="Brak artykułów dla wybranej frazy"
+          />
         ) : null}
 
         {articles.length > 0 ? (

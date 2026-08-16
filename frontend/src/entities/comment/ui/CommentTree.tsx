@@ -5,7 +5,7 @@ import type { CommentTreeNode } from '@/entities/comment/model/types'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { formatDateTime } from '@/shared/lib/date'
 import { cn } from '@/shared/lib/utils'
-import { Card, CardContent } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
 
 type CommentTreeProps<TComment extends CommentTreeNode> = {
   comments: TComment[]
@@ -21,13 +21,7 @@ export function CommentTree<TComment extends CommentTreeNode>({
   renderReplyForm,
 }: CommentTreeProps<TComment>) {
   if (comments.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-sm text-muted-foreground">
-          {emptyMessage}
-        </CardContent>
-      </Card>
-    )
+    return <EmptyState size="compact" title={emptyMessage} />
   }
 
   return (

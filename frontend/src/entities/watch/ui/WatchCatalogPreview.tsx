@@ -1,9 +1,8 @@
-import { AlertCircle } from 'lucide-react'
-
 import { useWatches } from '@/entities/watch/api/useWatches'
 import { WatchCard } from '@/entities/watch/ui/WatchCard'
 import { Badge } from '@/shared/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 const previewParams = {
@@ -39,27 +38,21 @@ export function WatchCatalogPreview() {
       ) : null}
 
       {watchesQuery.isError ? (
-        <Card className="border-destructive/40">
-          <CardHeader className="flex-row items-start gap-3 space-y-0">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-              <AlertCircle className="size-5" aria-hidden="true" />
-            </div>
-            <div>
-              <CardTitle>Nie udało się pobrać katalogu</CardTitle>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Sprawdź, czy backend działa i czy `/api/watches` odpowiada.
-              </p>
-            </div>
-          </CardHeader>
-        </Card>
+        <ErrorState
+          description="Sprawdź połączenie i spróbuj ponownie za chwilę."
+          isRetrying={watchesQuery.isFetching}
+          onRetry={() => void watchesQuery.refetch()}
+          size="compact"
+          title="Nie udało się pobrać katalogu"
+        />
       ) : null}
 
       {watchesQuery.isSuccess && watches.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-sm text-muted-foreground">
-            Katalog jest pusty. Po dodaniu danych zatwierdzone zegarki pojawią się tutaj.
-          </CardContent>
-        </Card>
+        <EmptyState
+          description="Po dodaniu danych zatwierdzone zegarki pojawią się tutaj."
+          size="compact"
+          title="Katalog jest pusty"
+        />
       ) : null}
 
       {watches.length > 0 ? (

@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, Gauge, MessageCircle, Ruler, Star, Watch, Waves } from 'lucide-react'
+import { ArrowLeft, Gauge, MessageCircle, Ruler, Star, Watch, Waves } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 
 import { useWatch } from '@/entities/watch/api/useWatches'
@@ -13,6 +13,7 @@ import { CreateReviewForm } from '@/features/review-create/ui/CreateReviewForm'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function WatchDetailsPage() {
@@ -27,19 +28,12 @@ export function WatchDetailsPage() {
 
   if (watchQuery.isError || !watchQuery.data) {
     return (
-      <Card className="border-destructive/40">
-        <CardHeader className="flex-row items-start gap-3 space-y-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-            <AlertCircle className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <CardTitle>Nie udało się pobrać zegarka</CardTitle>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Sprawdź, czy wybrany model nadal istnieje w katalogu.
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        description="Sprawdź, czy wybrany model nadal istnieje w katalogu."
+        isRetrying={watchQuery.isFetching}
+        onRetry={() => void watchQuery.refetch()}
+        title="Nie udało się pobrać zegarka"
+      />
     )
   }
 
@@ -95,7 +89,14 @@ export function WatchDetailsPage() {
             />
             <CreateReviewForm watchId={watch.id} />
             {reviewsQuery.isLoading ? <Skeleton className="h-48" /> : null}
-            {reviewsQuery.isError ? <InlineError message="Nie udało się pobrać recenzji." /> : null}
+            {reviewsQuery.isError ? (
+              <ErrorState
+                isRetrying={reviewsQuery.isFetching}
+                onRetry={() => void reviewsQuery.refetch()}
+                size="compact"
+                title="Nie udało się pobrać recenzji"
+              />
+            ) : null}
             {reviewsQuery.isSuccess ? <ReviewList reviews={reviews} /> : null}
           </section>
         </div>
@@ -106,7 +107,14 @@ export function WatchDetailsPage() {
             description={`${commentsCount} wypowiedzi w drzewie dyskusji`}
           />
           {commentsQuery.isLoading ? <Skeleton className="h-64" /> : null}
-          {commentsQuery.isError ? <InlineError message="Nie udało się pobrać komentarzy." /> : null}
+          {commentsQuery.isError ? (
+            <ErrorState
+              isRetrying={commentsQuery.isFetching}
+              onRetry={() => void commentsQuery.refetch()}
+              size="compact"
+              title="Nie udało się pobrać komentarzy"
+            />
+          ) : null}
           {commentsQuery.isSuccess ? <WatchCommentSection comments={comments} watchId={watch.id} /> : null}
         </section>
       </section>
@@ -188,17 +196,6 @@ function SectionHeader({ title, description }: SectionHeaderProps) {
       <h2 className="text-2xl font-semibold tracking-normal text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
     </div>
-  )
-}
-
-function InlineError({ message }: { message: string }) {
-  return (
-    <Card className="border-destructive/40">
-      <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
-        <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-        {message}
-      </CardContent>
-    </Card>
   )
 }
 

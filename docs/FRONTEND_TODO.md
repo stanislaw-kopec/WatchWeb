@@ -131,8 +131,8 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 - [ ] Frontendowe testy komponentow.
 - [ ] Frontendowe testy przeplywow uzytkownika.
-- [ ] Wspolne komponenty dla pustych stanow.
-- [ ] Wspolne komponenty dla bledow i retry.
+- [x] Wspolne komponenty dla pustych stanow.
+- [x] Wspolne komponenty dla bledow i retry.
 - [ ] Wspolne komponenty formularzy dla pol tekstowych, uploadu plikow i statusow mutacji.
 - [x] Role-based route guards dla `USER`, `JOURNALIST`, `MODERATOR`, `ADMIN`.
 - [ ] Przejrzec teksty w UI i usunac techniczne opisy, ktore byly pomocne w fazie budowy.

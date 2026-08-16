@@ -1,5 +1,4 @@
 import {
-  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -28,6 +27,8 @@ import { MyWatchSubmissionStatusFilter } from '@/features/my-watch-submissions/u
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Pagination } from '@/shared/ui/pagination'
 import { Select } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -143,29 +144,19 @@ export function MyWatchSubmissionsPage() {
         {submissionsQuery.isLoading ? <MyWatchSubmissionSkeleton /> : null}
 
         {submissionsQuery.isError ? (
-          <Card className="border-destructive/40">
-            <CardHeader className="flex-row items-start gap-3 space-y-0">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-                <AlertCircle className="size-5" aria-hidden="true" />
-              </div>
-              <div>
-                <CardTitle>Nie udało się pobrać Twoich zgłoszeń</CardTitle>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {submissionsQuery.error instanceof Error
-                    ? submissionsQuery.error.message
-                    : 'Spróbuj odświeżyć listę.'}
-                </p>
-              </div>
-            </CardHeader>
-          </Card>
+          <ErrorState
+            description="Nie mogliśmy odświeżyć listy Twoich zgłoszeń."
+            isRetrying={submissionsQuery.isFetching}
+            onRetry={() => void submissionsQuery.refetch()}
+            title="Nie udało się pobrać Twoich zgłoszeń"
+          />
         ) : null}
 
         {submissionsQuery.isSuccess && submissions.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Nie ma zgłoszeń dla wybranego statusu.
-            </CardContent>
-          </Card>
+          <EmptyState
+            description="Wybierz inny status albo zgłoś nowy zegarek do katalogu."
+            title="Brak zgłoszeń dla wybranego statusu"
+          />
         ) : null}
 
         {submissions.length > 0 ? (

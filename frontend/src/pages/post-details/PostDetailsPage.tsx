@@ -1,5 +1,4 @@
 import {
-  AlertCircle,
   ArrowLeft,
   CalendarDays,
   FileText,
@@ -20,6 +19,7 @@ import { formatDateTime } from '@/shared/lib/date'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function PostDetailsPage() {
@@ -33,19 +33,12 @@ export function PostDetailsPage() {
 
   if (postQuery.isError || !postQuery.data) {
     return (
-      <Card className="border-destructive/40">
-        <CardHeader className="flex-row items-start gap-3 space-y-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-            <AlertCircle className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <CardTitle>Nie udało się pobrać posta</CardTitle>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Sprawdź, czy wybrany wpis nadal jest dostępny publicznie.
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        description="Sprawdź, czy wybrany wpis nadal jest dostępny publicznie."
+        isRetrying={postQuery.isFetching}
+        onRetry={() => void postQuery.refetch()}
+        title="Nie udało się pobrać posta"
+      />
     )
   }
 
@@ -125,7 +118,14 @@ export function PostDetailsPage() {
           description={`${commentsCount} wypowiedzi w drzewie dyskusji`}
         />
         {commentsQuery.isLoading ? <Skeleton className="h-64" /> : null}
-        {commentsQuery.isError ? <InlineError message="Nie udało się pobrać komentarzy." /> : null}
+        {commentsQuery.isError ? (
+          <ErrorState
+            isRetrying={commentsQuery.isFetching}
+            onRetry={() => void commentsQuery.refetch()}
+            size="compact"
+            title="Nie udało się pobrać komentarzy"
+          />
+        ) : null}
         {commentsQuery.isSuccess ? <PostCommentSection comments={comments} postId={post.id} /> : null}
       </section>
     </div>
@@ -181,17 +181,6 @@ function SectionHeader({ title, description }: SectionHeaderProps) {
       <h2 className="text-2xl font-semibold tracking-normal text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
     </div>
-  )
-}
-
-function InlineError({ message }: { message: string }) {
-  return (
-    <Card className="border-destructive/40">
-      <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
-        <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-        {message}
-      </CardContent>
-    </Card>
   )
 }
 

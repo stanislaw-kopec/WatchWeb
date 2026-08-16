@@ -1,5 +1,4 @@
 import {
-  AlertCircle,
   CalendarDays,
   ListChecks,
   Mail,
@@ -24,6 +23,7 @@ import { formatDateTime } from '@/shared/lib/date'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function ProfilePage() {
@@ -43,19 +43,12 @@ export function ProfilePage() {
 
   if (currentUserQuery.isError && !user) {
     return (
-      <Card className="border-destructive/40">
-        <CardHeader className="flex-row items-start gap-3 space-y-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-            <AlertCircle className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <CardTitle>Nie udało się pobrać profilu</CardTitle>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Zaloguj się ponownie albo odśwież sesję.
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        description="Zaloguj się ponownie albo odśwież sesję."
+        isRetrying={currentUserQuery.isFetching}
+        onRetry={() => void currentUserQuery.refetch()}
+        title="Nie udało się pobrać profilu"
+      />
     )
   }
 

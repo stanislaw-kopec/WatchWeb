@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, BookOpenText, CalendarDays, FileText, UserRound } from 'lucide-react'
+import { ArrowLeft, BookOpenText, CalendarDays, FileText, UserRound } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 
 import { useArticle } from '@/entities/article/api/useArticles'
@@ -11,6 +11,7 @@ import { formatDateTime } from '@/shared/lib/date'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function ArticleDetailsPage() {
@@ -24,19 +25,12 @@ export function ArticleDetailsPage() {
 
   if (articleQuery.isError || !articleQuery.data) {
     return (
-      <Card className="border-destructive/40">
-        <CardHeader className="flex-row items-start gap-3 space-y-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-            <AlertCircle className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <CardTitle>Nie udało się pobrać artykułu</CardTitle>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Sprawdź, czy wybrany materiał nadal jest dostępny w archiwum.
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        description="Sprawdź, czy wybrany materiał nadal jest dostępny w archiwum."
+        isRetrying={articleQuery.isFetching}
+        onRetry={() => void articleQuery.refetch()}
+        title="Nie udało się pobrać artykułu"
+      />
     )
   }
 

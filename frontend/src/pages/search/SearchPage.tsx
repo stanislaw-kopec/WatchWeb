@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { AlertCircle, ArrowRight, Hash, MessageSquareText, Newspaper, Watch } from 'lucide-react'
+import { ArrowRight, Hash, MessageSquareText, Newspaper, Watch } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 
 import { getArticles } from '@/entities/article/api/articleApi'
@@ -13,7 +13,8 @@ import { getWatches } from '@/entities/watch/api/watchApi'
 import { WatchCard } from '@/entities/watch/ui/WatchCard'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 const SEARCH_PAGE_SIZE = 4
@@ -63,11 +64,11 @@ export function SearchPage() {
           label="Wyszukiwanie"
           title="Szukaj w WatchWeb"
         />
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Wyniki pojawią się po wpisaniu frazy.
-          </CardContent>
-        </Card>
+        <EmptyState
+          description="Użyj pola wyszukiwania w nagłówku aplikacji."
+          size="compact"
+          title="Wyniki pojawią się po wpisaniu frazy"
+        />
       </div>
     )
   }
@@ -90,6 +91,8 @@ export function SearchPage() {
       <ResultSection
         error={watchesQuery.isError}
         isLoading={watchesQuery.isLoading}
+        isRetrying={watchesQuery.isFetching}
+        onRetry={() => void watchesQuery.refetch()}
         title="Katalog"
         total={watchesQuery.data?.totalElements}
         viewAllHref={`/watches?brand=${encodeURIComponent(query)}`}
@@ -101,13 +104,15 @@ export function SearchPage() {
             ))}
           </div>
         ) : (
-          <EmptyResult message="Brak zegarków dla tej marki." />
+          <EmptyState size="compact" title="Brak zegarków dla tej marki" />
         )}
       </ResultSection>
 
       <ResultSection
         error={postsQuery.isError}
         isLoading={postsQuery.isLoading}
+        isRetrying={postsQuery.isFetching}
+        onRetry={() => void postsQuery.refetch()}
         title="Posty"
         total={postsQuery.data?.totalElements}
         viewAllHref={`/posts?query=${encodeURIComponent(query)}`}
@@ -119,13 +124,15 @@ export function SearchPage() {
             ))}
           </div>
         ) : (
-          <EmptyResult message="Brak postów dla tej frazy." />
+          <EmptyState size="compact" title="Brak postów dla tej frazy" />
         )}
       </ResultSection>
 
       <ResultSection
         error={articlesQuery.isError}
         isLoading={articlesQuery.isLoading}
+        isRetrying={articlesQuery.isFetching}
+        onRetry={() => void articlesQuery.refetch()}
         title="Artykuły"
         total={articlesQuery.data?.totalElements}
         viewAllHref={`/articles?query=${encodeURIComponent(query)}`}
@@ -137,20 +144,22 @@ export function SearchPage() {
             ))}
           </div>
         ) : (
-          <EmptyResult message="Brak artykułów dla tej frazy." />
+          <EmptyState size="compact" title="Brak artykułów dla tej frazy" />
         )}
       </ResultSection>
 
       <ResultSection
         error={hashtagsQuery.isError}
         isLoading={hashtagsQuery.isLoading}
+        isRetrying={hashtagsQuery.isFetching}
+        onRetry={() => void hashtagsQuery.refetch()}
         title="Hashtagi"
         total={hashtagsQuery.data?.totalElements}
       >
         {hashtags.length > 0 ? (
           <HashtagLinkList hashtags={hashtags} />
         ) : (
-          <EmptyResult message="Brak hashtagów dla tej frazy." />
+          <EmptyState size="compact" title="Brak hashtagów dla tej frazy" />
         )}
       </ResultSection>
     </div>
@@ -203,12 +212,23 @@ type ResultSectionProps = {
   title: string
   total?: number
   isLoading: boolean
+  isRetrying: boolean
   error: boolean
+  onRetry: () => void
   viewAllHref?: string
   children: ReactNode
 }
 
-function ResultSection({ title, total, isLoading, error, viewAllHref, children }: ResultSectionProps) {
+function ResultSection({
+  title,
+  total,
+  isLoading,
+  isRetrying,
+  error,
+  onRetry,
+  viewAllHref,
+  children,
+}: ResultSectionProps) {
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -229,7 +249,14 @@ function ResultSection({ title, total, isLoading, error, viewAllHref, children }
       </div>
 
       {isLoading ? <ResultSkeleton /> : null}
-      {error ? <InlineError /> : null}
+      {error ? (
+        <ErrorState
+          isRetrying={isRetrying}
+          onRetry={onRetry}
+          size="compact"
+          title="Nie udało się pobrać tej sekcji wyników"
+        />
+      ) : null}
       {!isLoading && !error ? children : null}
     </section>
   )
@@ -241,27 +268,6 @@ function ResultSkeleton() {
       <Skeleton className="h-24" />
       <Skeleton className="h-24" />
     </div>
-  )
-}
-
-function EmptyResult({ message }: { message: string }) {
-  return (
-    <Card>
-      <CardContent className="py-8 text-sm text-muted-foreground">
-        {message}
-      </CardContent>
-    </Card>
-  )
-}
-
-function InlineError() {
-  return (
-    <Card className="border-destructive/40">
-      <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
-        <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-        Nie udało się pobrać tej sekcji wyników.
-      </CardContent>
-    </Card>
   )
 }
 

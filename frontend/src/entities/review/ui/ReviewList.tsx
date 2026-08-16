@@ -5,7 +5,7 @@ import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { ReviewActions } from '@/features/review-manage/ui/ReviewActions'
 import { formatDateTime } from '@/shared/lib/date'
-import { Card, CardContent } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
 
 type ReviewListProps = {
   reviews: Review[]
@@ -16,11 +16,11 @@ export function ReviewList({ reviews }: ReviewListProps) {
 
   if (reviews.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8 text-sm text-muted-foreground">
-          Ten zegarek nie ma jeszcze widocznych recenzji.
-        </CardContent>
-      </Card>
+      <EmptyState
+        description="Pierwsza opublikowana opinia pojawi się w tym miejscu."
+        size="compact"
+        title="Ten zegarek nie ma jeszcze recenzji"
+      />
     )
   }
 

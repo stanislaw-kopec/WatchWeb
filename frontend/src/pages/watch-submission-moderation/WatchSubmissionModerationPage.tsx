@@ -1,5 +1,4 @@
 import {
-  AlertCircle,
   CheckCircle2,
   Clock,
   FileText,
@@ -29,6 +28,8 @@ import { WatchSubmissionModerationStatusFilter } from '@/features/watch-submissi
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/ui/empty-state'
+import { ErrorState } from '@/shared/ui/error-state'
 import { Pagination } from '@/shared/ui/pagination'
 import { Select } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -132,29 +133,19 @@ export function WatchSubmissionModerationPage() {
         {moderationQuery.isLoading ? <ModerationSkeleton /> : null}
 
         {moderationQuery.isError ? (
-          <Card className="border-destructive/40">
-            <CardHeader className="flex-row items-start gap-3 space-y-0">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
-                <AlertCircle className="size-5" aria-hidden="true" />
-              </div>
-              <div>
-                <CardTitle>Nie udało się pobrać zgłoszeń zegarków</CardTitle>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {moderationQuery.error instanceof Error
-                    ? moderationQuery.error.message
-                    : 'Sprawdź, czy masz aktywną sesję moderatora albo administratora.'}
-                </p>
-              </div>
-            </CardHeader>
-          </Card>
+          <ErrorState
+            description="Sprawdź aktywną sesję moderatora lub administratora i spróbuj ponownie."
+            isRetrying={moderationQuery.isFetching}
+            onRetry={() => void moderationQuery.refetch()}
+            title="Nie udało się pobrać zgłoszeń zegarków"
+          />
         ) : null}
 
         {moderationQuery.isSuccess && submissions.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Nie ma zgłoszeń dla wybranego statusu.
-            </CardContent>
-          </Card>
+          <EmptyState
+            description="Wybierz inny status, aby sprawdzić pozostałe zgłoszenia."
+            title="Brak zgłoszeń dla wybranego statusu"
+          />
         ) : null}
 
         {submissions.length > 0 ? (
