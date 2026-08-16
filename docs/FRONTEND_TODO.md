@@ -27,11 +27,11 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Posty spolecznosciowe
 
-- [ ] Encja/API frontendu dla postow.
-- [ ] Publiczna lista zaakceptowanych postow.
-- [ ] Wyszukiwanie postow po tekscie.
-- [ ] Filtrowanie postow po hashtagu.
-- [ ] Szczegoly posta.
+- [x] Encja/API frontendu dla postow.
+- [x] Publiczna lista zaakceptowanych postow.
+- [x] Wyszukiwanie postow po tekscie.
+- [x] Filtrowanie postow po hashtagu.
+- [x] Szczegoly posta.
 - [ ] Tworzenie posta przez zalogowanego uzytkownika.
 - [ ] Formularz hashtagow przy tworzeniu/edycji posta.
 - [ ] Widok "moje posty" z filtrami statusu: `PENDING`, `APPROVED`, `REJECTED`.
@@ -39,8 +39,8 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 - [ ] Edycja wlasnego posta.
 - [ ] Usuwanie wlasnego posta.
 - [ ] Upload zdjecia do posta.
-- [ ] Lista komentarzy pod postem.
-- [ ] Dodawanie komentarza i odpowiedzi pod postem.
+- [x] Lista komentarzy pod postem.
+- [x] Dodawanie komentarza i odpowiedzi pod postem.
 - [ ] Usuwanie komentarzy pod postem.
 
 ### Zgloszenia zegarkow do katalogu

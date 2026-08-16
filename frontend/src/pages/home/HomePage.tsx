@@ -50,6 +50,12 @@ export function HomePage() {
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link to="/posts">
+                Posty społeczności
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
             <a
               className="inline-flex h-10 items-center rounded-md border border-input bg-card px-4 text-sm font-medium text-foreground transition hover:bg-secondary"
               href="/swagger-ui.html"
@@ -84,9 +90,9 @@ export function HomePage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-            <p>Logowanie i sesja JWT z odświeżaniem tokenów.</p>
-            <p>Szczegóły zegarka z recenzjami i komentarzami.</p>
-            <p>Szczegóły artykułu i formularze redakcyjne oparte na Zod.</p>
+            <p>Tworzenie, edycja i usuwanie własnych postów.</p>
+            <p>Zgłoszenia nowych zegarków do katalogu.</p>
+            <p>Moderacja treści oraz kolejek zgłoszeń.</p>
           </div>
         </CardContent>
       </Card>

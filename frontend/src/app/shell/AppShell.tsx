@@ -1,4 +1,16 @@
-import { Bell, Compass, LogIn, LogOut, Newspaper, Search, ShieldCheck, UserCircle, UserPlus, Watch } from 'lucide-react'
+import {
+  Bell,
+  Compass,
+  LogIn,
+  LogOut,
+  MessageSquareText,
+  Newspaper,
+  Search,
+  ShieldCheck,
+  UserCircle,
+  UserPlus,
+  Watch,
+} from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router'
 
 import { USER_ROLE_LABELS } from '@/features/auth/model/roleLabels'
@@ -9,6 +21,7 @@ import { Button } from '@/shared/ui/button'
 const navigation = [
   { label: 'Start', href: '/', icon: Compass },
   { label: 'Katalog', href: '/watches', icon: Watch },
+  { label: 'Posty', href: '/posts', icon: MessageSquareText },
   { label: 'Artykuły', href: '/articles', icon: Newspaper },
   { label: 'Moderacja', href: '/moderation', icon: ShieldCheck },
 ]
@@ -55,7 +68,7 @@ export function AppShell() {
               <Search className="size-4 shrink-0" aria-hidden="true" />
               <input
                 className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                placeholder="Szukaj zegarków, marek i wpisów"
+                placeholder="Szukaj zegarków, marek, postów i artykułów"
                 type="search"
               />
             </div>

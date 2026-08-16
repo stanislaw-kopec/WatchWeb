@@ -1,4 +1,4 @@
-export type WatchComment = {
+export type CommentTreeNode = {
   id: string
   parentId: string | null
   authorId: string
@@ -7,5 +7,9 @@ export type WatchComment = {
   depth: number
   deleted: boolean
   createdAt: string
-  children: WatchComment[]
+  children: CommentTreeNode[]
 }
+
+export type WatchComment = CommentTreeNode
+
+export type PostComment = CommentTreeNode

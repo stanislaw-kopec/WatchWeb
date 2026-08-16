@@ -7,6 +7,8 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
+import { PostDetailsPage } from '@/pages/post-details/PostDetailsPage'
+import { PostsPage } from '@/pages/posts/PostsPage'
 import { ProfilePage } from '@/pages/profile/ProfilePage'
 import { WatchDetailsPage } from '@/pages/watch-details/WatchDetailsPage'
 import { WatchesPage } from '@/pages/watches/WatchesPage'
@@ -19,6 +21,8 @@ export function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path="articles" element={<ArticlesPage />} />
         <Route path="articles/:articleId" element={<ArticleDetailsPage />} />
+        <Route path="posts" element={<PostsPage />} />
+        <Route path="posts/:postId" element={<PostDetailsPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route
           path="me"
