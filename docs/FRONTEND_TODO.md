@@ -61,10 +61,10 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 - [x] Filtrowanie postow moderacyjnych po statusie.
 - [x] Zatwierdzanie posta.
 - [x] Odrzucanie posta z powodem.
-- [ ] Widok kolejki zgloszen zegarkow do moderacji.
-- [ ] Filtrowanie zgloszen zegarkow po statusie.
-- [ ] Zatwierdzanie zgloszenia zegarka.
-- [ ] Odrzucanie zgloszenia zegarka z powodem.
+- [x] Widok kolejki zgloszen zegarkow do moderacji.
+- [x] Filtrowanie zgloszen zegarkow po statusie.
+- [x] Zatwierdzanie zgloszenia zegarka.
+- [x] Odrzucanie zgloszenia zegarka z powodem.
 
 ## Sredni priorytet
 

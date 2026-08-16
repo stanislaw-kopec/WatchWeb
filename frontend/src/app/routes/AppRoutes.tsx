@@ -14,6 +14,7 @@ import { PostCreatePage } from '@/pages/post-create/PostCreatePage'
 import { PostDetailsPage } from '@/pages/post-details/PostDetailsPage'
 import { PostsPage } from '@/pages/posts/PostsPage'
 import { ProfilePage } from '@/pages/profile/ProfilePage'
+import { WatchSubmissionModerationPage } from '@/pages/watch-submission-moderation/WatchSubmissionModerationPage'
 import { WatchDetailsPage } from '@/pages/watch-details/WatchDetailsPage'
 import { WatchesPage } from '@/pages/watches/WatchesPage'
 import { RequireAuth } from '@/features/auth/ui/RequireAuth'
@@ -50,6 +51,14 @@ export function AppRoutes() {
           element={
             <RequireRole allowedRoles={['ROLE_MODERATOR', 'ROLE_ADMIN']}>
               <ModerationPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="moderation/watch-submissions"
+          element={
+            <RequireRole allowedRoles={['ROLE_MODERATOR', 'ROLE_ADMIN']}>
+              <WatchSubmissionModerationPage />
             </RequireRole>
           }
         />
