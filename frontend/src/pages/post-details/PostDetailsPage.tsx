@@ -14,6 +14,7 @@ import { usePostComments } from '@/entities/comment/api/usePostComments'
 import type { PostComment } from '@/entities/comment/model/types'
 import { usePost } from '@/entities/post/api/usePosts'
 import type { Post } from '@/entities/post/model/types'
+import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { PostCommentSection } from '@/features/comment-create/ui/PostCommentSection'
 import { formatDateTime } from '@/shared/lib/date'
 import { Badge } from '@/shared/ui/badge'
@@ -66,10 +67,12 @@ export function PostDetailsPage() {
           <div className="p-6 md:p-8">
             <Badge variant="secondary">Post społeczności</Badge>
             <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <UserRound className="size-4" aria-hidden="true" />
-                {post.authorUsername}
-              </span>
+              <UserProfileLink
+                className="text-muted-foreground"
+                userId={post.authorId}
+                username={post.authorUsername}
+                withIcon
+              />
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="size-4" aria-hidden="true" />
                 {formatDateTime(post.createdAt)}

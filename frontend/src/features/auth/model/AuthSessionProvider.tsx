@@ -8,6 +8,7 @@ import type { AuthResponse } from '@/features/auth/model/types'
 import {
   clearAuthSession,
   getStoredAuthSession,
+  saveAuthUser,
   saveAuthSession,
 } from '@/features/auth/model/authSessionStorage'
 import { setAuthRefreshHandler } from '@/shared/api/httpClient'
@@ -25,6 +26,18 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
 
     saveAuthSession(response)
     setSession(nextSession)
+  }, [])
+
+  const updateUser = useCallback((user: AuthSession['user']) => {
+    saveAuthUser(user)
+    setSession((currentSession) =>
+      currentSession
+        ? {
+            ...currentSession,
+            user,
+          }
+        : currentSession,
+    )
   }, [])
 
   const refreshSession = useCallback(async () => {
@@ -74,10 +87,11 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       user: session?.user ?? null,
       isAuthenticated: Boolean(session),
       signIn,
+      updateUser,
       signOut,
       refreshSession,
     }),
-    [refreshSession, session, signIn, signOut],
+    [refreshSession, session, signIn, signOut, updateUser],
   )
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>

@@ -15,6 +15,7 @@ import { PostCreatePage } from '@/pages/post-create/PostCreatePage'
 import { PostDetailsPage } from '@/pages/post-details/PostDetailsPage'
 import { PostsPage } from '@/pages/posts/PostsPage'
 import { ProfilePage } from '@/pages/profile/ProfilePage'
+import { UserProfilePage } from '@/pages/user-profile/UserProfilePage'
 import { WatchSubmissionModerationPage } from '@/pages/watch-submission-moderation/WatchSubmissionModerationPage'
 import { WatchDetailsPage } from '@/pages/watch-details/WatchDetailsPage'
 import { WatchSubmitPage } from '@/pages/watch-submit/WatchSubmitPage'
@@ -89,6 +90,14 @@ export function AppRoutes() {
           }
         />
         <Route path="register" element={<RegisterPage />} />
+        <Route
+          path="users/:userId"
+          element={
+            <RequireAuth>
+              <UserProfilePage />
+            </RequireAuth>
+          }
+        />
         <Route path="watches" element={<WatchesPage />} />
         <Route
           path="watches/submit"

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { MessageCircle } from 'lucide-react'
 
 import type { CommentTreeNode } from '@/entities/comment/model/types'
+import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { formatDateTime } from '@/shared/lib/date'
 import { cn } from '@/shared/lib/utils'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -70,7 +71,11 @@ function CommentNode<TComment extends CommentTreeNode>({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-medium text-foreground">{comment.authorUsername}</p>
+            <UserProfileLink
+              className="font-medium text-foreground"
+              userId={comment.authorId}
+              username={comment.authorUsername}
+            />
             <p className="text-xs text-muted-foreground">{formatDateTime(comment.createdAt)}</p>
           </div>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">

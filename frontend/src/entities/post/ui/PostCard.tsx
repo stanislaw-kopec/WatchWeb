@@ -1,7 +1,8 @@
-import { ArrowRight, CalendarDays, Hash, MessageSquareText, UserRound } from 'lucide-react'
+import { ArrowRight, CalendarDays, Hash, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
 import type { Post } from '@/entities/post/model/types'
+import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { formatDateTime } from '@/shared/lib/date'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -24,10 +25,12 @@ export function PostCard({ post }: PostCardProps) {
               <CalendarDays className="size-3.5" aria-hidden="true" />
               {formatDateTime(post.createdAt)}
             </span>
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <UserRound className="size-3.5" aria-hidden="true" />
-              {post.authorUsername}
-            </span>
+            <UserProfileLink
+              className="text-xs text-muted-foreground"
+              userId={post.authorId}
+              username={post.authorUsername}
+              withIcon
+            />
           </div>
 
           <div className="min-w-0">

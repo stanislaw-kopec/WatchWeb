@@ -29,7 +29,11 @@ export function saveAuthSession(response: AuthResponse) {
     accessToken: response.accessToken,
     refreshToken: response.refreshToken,
   })
-  writeStorageValue(USER_KEY, JSON.stringify(response.user))
+  saveAuthUser(response.user)
+}
+
+export function saveAuthUser(user: User) {
+  writeStorageValue(USER_KEY, JSON.stringify(user))
 }
 
 export function clearAuthSession() {

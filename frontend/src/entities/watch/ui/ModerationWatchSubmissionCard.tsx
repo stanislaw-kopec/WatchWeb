@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
-import { CalendarDays, UserRound } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 
 import type { ModerationWatchSubmission } from '@/entities/watch/model/submissionTypes'
 import { WatchSubmissionStatusBadge } from '@/entities/watch/ui/WatchSubmissionStatusBadge'
 import { WatchTechnicalDetailsGrid } from '@/entities/watch/ui/WatchTechnicalDetailsGrid'
+import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { formatDateTime } from '@/shared/lib/date'
 import { Card, CardContent } from '@/shared/ui/card'
 
@@ -26,10 +27,12 @@ export function ModerationWatchSubmissionCard({
               <CalendarDays className="size-3.5" aria-hidden="true" />
               {formatDateTime(submission.createdAt)}
             </span>
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <UserRound className="size-3.5" aria-hidden="true" />
-              {submission.submittedByUsername}
-            </span>
+            <UserProfileLink
+              className="text-xs text-muted-foreground"
+              userId={submission.submittedById}
+              username={submission.submittedByUsername}
+              withIcon
+            />
           </div>
 
           <div className="mt-4 min-w-0">

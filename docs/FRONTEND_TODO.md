@@ -70,11 +70,11 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Profil i konto
 
-- [ ] Edycja profilu: nazwa uzytkownika i email.
-- [ ] Upload avatara.
-- [ ] Zmiana hasla.
-- [ ] Usuniecie/anonymizacja konta.
-- [ ] Publiczny widok profilu uzytkownika po `GET /api/users/{id}`.
+- [x] Edycja profilu: nazwa uzytkownika i email.
+- [x] Upload avatara.
+- [x] Zmiana hasla.
+- [x] Usuniecie/anonymizacja konta.
+- [x] Widok profilu uzytkownika po `GET /api/users/{id}` dla zalogowanych uzytkownikow.
 
 ### Recenzje
 
