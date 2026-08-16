@@ -64,13 +64,16 @@ export function AppShell() {
             </Button>
             {isAuthenticated && user ? (
               <>
-                <div className="hidden min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 sm:flex">
+                <Link
+                  className="hidden min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 transition hover:bg-secondary sm:flex"
+                  to="/me"
+                >
                   <UserCircle className="size-4 shrink-0 text-primary" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{user.username}</p>
                     <p className="text-xs text-muted-foreground">{USER_ROLE_LABELS[user.role]}</p>
                   </div>
-                </div>
+                </Link>
                 <Button variant="ghost" size="icon" aria-label="Wyloguj" onClick={() => void signOut()}>
                   <LogOut className="size-4" aria-hidden="true" />
                 </Button>

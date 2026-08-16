@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { PropsWithChildren } from 'react'
 
-import { logout } from '@/features/auth/api/authApi'
+import { logout, refreshAuthToken } from '@/features/auth/api/authApi'
 import { AuthSessionContext } from '@/features/auth/model/authSessionContext'
 import type { AuthSession } from '@/features/auth/model/authSessionContext'
 import type { AuthResponse } from '@/features/auth/model/types'
@@ -10,6 +10,7 @@ import {
   getStoredAuthSession,
   saveAuthSession,
 } from '@/features/auth/model/authSessionStorage'
+import { setAuthRefreshHandler } from '@/shared/api/httpClient'
 
 export function AuthSessionProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<AuthSession | null>(() => getStoredAuthSession())
@@ -26,6 +27,26 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     setSession(nextSession)
   }, [])
 
+  const refreshSession = useCallback(async () => {
+    const refreshToken = session?.refreshToken
+
+    if (!refreshToken) {
+      clearAuthSession()
+      setSession(null)
+      return false
+    }
+
+    try {
+      const response = await refreshAuthToken(refreshToken)
+      signIn(response)
+      return true
+    } catch {
+      clearAuthSession()
+      setSession(null)
+      return false
+    }
+  }, [session?.refreshToken, signIn])
+
   const signOut = useCallback(async () => {
     const refreshToken = session?.refreshToken
 
@@ -41,6 +62,12 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
   }, [session?.refreshToken])
 
+  useEffect(() => {
+    setAuthRefreshHandler(refreshSession)
+
+    return () => setAuthRefreshHandler(null)
+  }, [refreshSession])
+
   const value = useMemo(
     () => ({
       session,
@@ -48,8 +75,9 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       isAuthenticated: Boolean(session),
       signIn,
       signOut,
+      refreshSession,
     }),
-    [session, signIn, signOut],
+    [refreshSession, session, signIn, signOut],
   )
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>

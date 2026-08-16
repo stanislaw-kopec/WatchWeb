@@ -16,6 +16,7 @@ export type AuthSessionContextValue = {
   isAuthenticated: boolean
   signIn: (response: AuthResponse) => void
   signOut: () => Promise<void>
+  refreshSession: () => Promise<boolean>
 }
 
 export const AuthSessionContext = createContext<AuthSessionContextValue | null>(null)
