@@ -55,12 +55,12 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Moderacja
 
-- [ ] Dodac trase `/moderation`, bo link jest juz widoczny w nawigacji.
+- [x] Dodac trase `/moderation`, bo link jest juz widoczny w nawigacji.
 - [x] Ograniczyc widocznosc linku "Moderacja" do `ROLE_MODERATOR` i `ROLE_ADMIN`.
-- [ ] Widok kolejki postow do moderacji.
-- [ ] Filtrowanie postow moderacyjnych po statusie.
-- [ ] Zatwierdzanie posta.
-- [ ] Odrzucanie posta z powodem.
+- [x] Widok kolejki postow do moderacji.
+- [x] Filtrowanie postow moderacyjnych po statusie.
+- [x] Zatwierdzanie posta.
+- [x] Odrzucanie posta z powodem.
 - [ ] Widok kolejki zgloszen zegarkow do moderacji.
 - [ ] Filtrowanie zgloszen zegarkow po statusie.
 - [ ] Zatwierdzanie zgloszenia zegarka.

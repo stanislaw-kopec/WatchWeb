@@ -7,6 +7,7 @@ import { ArticlesPage } from '@/pages/articles/ArticlesPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { HomePage } from '@/pages/home/HomePage'
+import { ModerationPage } from '@/pages/moderation/ModerationPage'
 import { MyPostsPage } from '@/pages/my-posts/MyPostsPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
 import { PostCreatePage } from '@/pages/post-create/PostCreatePage'
@@ -44,6 +45,14 @@ export function AppRoutes() {
         />
         <Route path="posts/:postId" element={<PostDetailsPage />} />
         <Route path="login" element={<LoginPage />} />
+        <Route
+          path="moderation"
+          element={
+            <RequireRole allowedRoles={['ROLE_MODERATOR', 'ROLE_ADMIN']}>
+              <ModerationPage />
+            </RequireRole>
+          }
+        />
         <Route
           path="me"
           element={
