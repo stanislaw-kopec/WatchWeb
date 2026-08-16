@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { MessageCircle } from 'lucide-react'
 
 import type { WatchComment } from '@/entities/comment/model/types'
@@ -7,9 +8,11 @@ import { Card, CardContent } from '@/shared/ui/card'
 
 type WatchCommentTreeProps = {
   comments: WatchComment[]
+  renderActions?: (comment: WatchComment) => ReactNode
+  renderReplyForm?: (comment: WatchComment) => ReactNode
 }
 
-export function WatchCommentTree({ comments }: WatchCommentTreeProps) {
+export function WatchCommentTree({ comments, renderActions, renderReplyForm }: WatchCommentTreeProps) {
   if (comments.length === 0) {
     return (
       <Card>
@@ -23,7 +26,12 @@ export function WatchCommentTree({ comments }: WatchCommentTreeProps) {
   return (
     <div className="space-y-3">
       {comments.map((comment) => (
-        <CommentNode comment={comment} key={comment.id} />
+        <CommentNode
+          comment={comment}
+          key={comment.id}
+          renderActions={renderActions}
+          renderReplyForm={renderReplyForm}
+        />
       ))}
     </div>
   )
@@ -31,9 +39,14 @@ export function WatchCommentTree({ comments }: WatchCommentTreeProps) {
 
 type CommentNodeProps = {
   comment: WatchComment
+  renderActions?: (comment: WatchComment) => ReactNode
+  renderReplyForm?: (comment: WatchComment) => ReactNode
 }
 
-function CommentNode({ comment }: CommentNodeProps) {
+function CommentNode({ comment, renderActions, renderReplyForm }: CommentNodeProps) {
+  const actions = renderActions?.(comment)
+  const replyForm = renderReplyForm?.(comment)
+
   return (
     <article
       className={cn(
@@ -53,13 +66,20 @@ function CommentNode({ comment }: CommentNodeProps) {
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {comment.deleted ? 'Komentarz został usunięty.' : comment.content}
           </p>
+          {actions ? <div className="mt-3">{actions}</div> : null}
+          {replyForm ? <div className="mt-3">{replyForm}</div> : null}
         </div>
       </div>
 
       {comment.children.length > 0 ? (
         <div className="mt-3 space-y-3">
           {comment.children.map((child) => (
-            <CommentNode comment={child} key={child.id} />
+            <CommentNode
+              comment={child}
+              key={child.id}
+              renderActions={renderActions}
+              renderReplyForm={renderReplyForm}
+            />
           ))}
         </div>
       ) : null}

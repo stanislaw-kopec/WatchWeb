@@ -6,9 +6,9 @@ import { formatMovementType } from '@/entities/watch/model/movementType'
 import type { Watch as WatchModel, WatchDetails } from '@/entities/watch/model/types'
 import { useWatchComments } from '@/entities/comment/api/useWatchComments'
 import type { WatchComment } from '@/entities/comment/model/types'
-import { WatchCommentTree } from '@/entities/comment/ui/WatchCommentTree'
 import { useWatchReviews } from '@/entities/review/api/useWatchReviews'
 import { ReviewList } from '@/entities/review/ui/ReviewList'
+import { WatchCommentSection } from '@/features/comment-create/ui/WatchCommentSection'
 import { CreateReviewForm } from '@/features/review-create/ui/CreateReviewForm'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -107,7 +107,7 @@ export function WatchDetailsPage() {
           />
           {commentsQuery.isLoading ? <Skeleton className="h-64" /> : null}
           {commentsQuery.isError ? <InlineError message="Nie udało się pobrać komentarzy." /> : null}
-          {commentsQuery.isSuccess ? <WatchCommentTree comments={comments} /> : null}
+          {commentsQuery.isSuccess ? <WatchCommentSection comments={comments} watchId={watch.id} /> : null}
         </section>
       </section>
     </div>
