@@ -86,7 +86,7 @@ export function HomePage() {
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
             <p>Logowanie i sesja JWT z odświeżaniem tokenów.</p>
             <p>Szczegóły zegarka z recenzjami i komentarzami.</p>
-            <p>Formularze zgłoszeń i moderacji oparte na Zod.</p>
+            <p>Szczegóły artykułu i formularze redakcyjne oparte na Zod.</p>
           </div>
         </CardContent>
       </Card>
