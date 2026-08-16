@@ -4,6 +4,9 @@
     "target": "es2023",
     "lib": ["ES2023"],
     "types": ["node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "skipLibCheck": true,
 
     /* Bundler mode */
