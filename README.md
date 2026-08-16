@@ -24,6 +24,8 @@ Projekt laczy:
 
 Szczegolowe wymagania projektowe znajduja sie w [docs/PROJECT.md](docs/PROJECT.md).
 
+Lista brakujacych widokow i akcji frontendu znajduje sie w [docs/FRONTEND_TODO.md](docs/FRONTEND_TODO.md).
+
 Zasady pracy nad kodem i konwencje architektoniczne sa opisane w [AGENTS.md](AGENTS.md).
 
 ## Struktura repozytorium
