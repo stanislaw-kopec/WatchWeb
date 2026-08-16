@@ -54,6 +54,7 @@ export function CreateReviewForm({ watchId }: CreateReviewFormProps) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['watch', watchId] }),
         queryClient.invalidateQueries({ queryKey: ['watch-reviews', watchId] }),
+        queryClient.invalidateQueries({ queryKey: ['my-reviews'] }),
       ])
     },
   })

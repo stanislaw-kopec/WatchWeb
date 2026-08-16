@@ -9,6 +9,7 @@ import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { ModerationPage } from '@/pages/moderation/ModerationPage'
 import { MyPostsPage } from '@/pages/my-posts/MyPostsPage'
+import { MyReviewsPage } from '@/pages/my-reviews/MyReviewsPage'
 import { MyWatchSubmissionsPage } from '@/pages/my-watch-submissions/MyWatchSubmissionsPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
@@ -79,6 +80,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <MyPostsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="me/reviews"
+          element={
+            <RequireAuth>
+              <MyReviewsPage />
             </RequireAuth>
           }
         />

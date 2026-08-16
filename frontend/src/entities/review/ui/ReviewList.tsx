@@ -2,6 +2,8 @@ import { Star } from 'lucide-react'
 
 import type { Review } from '@/entities/review/model/types'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
+import { useAuthSession } from '@/features/auth/model/useAuthSession'
+import { ReviewActions } from '@/features/review-manage/ui/ReviewActions'
 import { formatDateTime } from '@/shared/lib/date'
 import { Card, CardContent } from '@/shared/ui/card'
 
@@ -10,6 +12,8 @@ type ReviewListProps = {
 }
 
 export function ReviewList({ reviews }: ReviewListProps) {
+  const { user } = useAuthSession()
+
   if (reviews.length === 0) {
     return (
       <Card>
@@ -39,8 +43,25 @@ export function ReviewList({ reviews }: ReviewListProps) {
             </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">{review.content}</p>
+          {canManageReview(review, user) ? (
+            <div className="mt-4 border-t border-border pt-4">
+              <ReviewActions review={review} reviewerId={review.reviewerId} />
+            </div>
+          ) : null}
         </article>
       ))}
     </div>
+  )
+}
+
+function canManageReview(
+  review: Review,
+  user: ReturnType<typeof useAuthSession>['user'],
+) {
+  return Boolean(
+    user
+      && (user.id === review.reviewerId
+        || user.role === 'ROLE_MODERATOR'
+        || user.role === 'ROLE_ADMIN'),
   )
 }

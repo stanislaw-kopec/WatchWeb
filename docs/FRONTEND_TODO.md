@@ -78,10 +78,10 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Recenzje
 
-- [ ] Widok "moje recenzje" z `/api/users/me/reviews`.
-- [ ] Edycja wlasnej recenzji.
-- [ ] Usuwanie wlasnej recenzji.
-- [ ] Akcje moderatora/admina do usuwania cudzych recenzji, jesli maja byc dostepne w UI.
+- [x] Widok "moje recenzje" z `/api/users/me/reviews`.
+- [x] Edycja wlasnej recenzji.
+- [x] Usuwanie wlasnej recenzji.
+- [x] Akcje moderatora/admina do usuwania cudzych recenzji, jesli maja byc dostepne w UI.
 
 ### Komentarze pod zegarkami
 

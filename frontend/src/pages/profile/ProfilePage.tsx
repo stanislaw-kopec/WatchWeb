@@ -6,6 +6,7 @@ import {
   PlusCircle,
   RefreshCw,
   ShieldCheck,
+  Star,
   Watch,
 } from 'lucide-react'
 import { useEffect } from 'react'
@@ -139,6 +140,12 @@ export function ProfilePage() {
                 <Link to="/me/posts">
                   <ListChecks className="size-4" aria-hidden="true" />
                   Moje posty
+                </Link>
+              </Button>
+              <Button asChild className="w-full" variant="outline">
+                <Link to="/me/reviews">
+                  <Star className="size-4" aria-hidden="true" />
+                  Moje recenzje
                 </Link>
               </Button>
             </CardContent>
