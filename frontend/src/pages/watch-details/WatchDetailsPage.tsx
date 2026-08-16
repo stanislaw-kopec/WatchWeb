@@ -9,6 +9,7 @@ import type { WatchComment } from '@/entities/comment/model/types'
 import { WatchCommentTree } from '@/entities/comment/ui/WatchCommentTree'
 import { useWatchReviews } from '@/entities/review/api/useWatchReviews'
 import { ReviewList } from '@/entities/review/ui/ReviewList'
+import { CreateReviewForm } from '@/features/review-create/ui/CreateReviewForm'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -92,6 +93,7 @@ export function WatchDetailsPage() {
                   : 'Ładowanie recenzji'
               }
             />
+            <CreateReviewForm watchId={watch.id} />
             {reviewsQuery.isLoading ? <Skeleton className="h-48" /> : null}
             {reviewsQuery.isError ? <InlineError message="Nie udało się pobrać recenzji." /> : null}
             {reviewsQuery.isSuccess ? <ReviewList reviews={reviews} /> : null}
