@@ -1,8 +1,11 @@
 package com.watchweb.app;
 
 import com.watchweb.app.domain.article.repository.ArticleRepository;
+import com.watchweb.app.domain.comment.repository.PostCommentRepository;
+import com.watchweb.app.domain.comment.repository.WatchCommentRepository;
 import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.repository.PostRepository;
+import com.watchweb.app.domain.review.repository.ReviewRepository;
 import com.watchweb.app.domain.user.entity.Role;
 import com.watchweb.app.domain.user.repository.UserRepository;
 import com.watchweb.app.domain.watch.entity.WatchSubmissionStatus;
@@ -61,6 +64,15 @@ class DevDataSeederIntegrationTest {
     private ArticleRepository articleRepository;
 
     @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Autowired
+    private WatchCommentRepository watchCommentRepository;
+
+    @Autowired
+    private PostCommentRepository postCommentRepository;
+
+    @Autowired
     private WatchNameNormalizer watchNameNormalizer;
 
     @Test
@@ -73,21 +85,31 @@ class DevDataSeederIntegrationTest {
                 .hasValueSatisfying(user -> assertThat(user.getRole()).isEqualTo(Role.ROLE_JOURNALIST));
         assertThat(userRepository.findByEmail("user@watchweb.local"))
                 .hasValueSatisfying(user -> assertThat(user.getRole()).isEqualTo(Role.ROLE_USER));
+        assertThat(userRepository.findByEmail("member01@watchweb.local"))
+                .hasValueSatisfying(user -> assertThat(user.getRole()).isEqualTo(Role.ROLE_USER));
+        assertThat(userRepository.count()).isGreaterThanOrEqualTo(40);
 
         assertThat(watchRepository.existsByBrandNormalizedAndModelNormalized(
                 watchNameNormalizer.normalize("Seiko"),
                 watchNameNormalizer.normalize("Alpinist SPB121")
         )).isTrue();
+        assertThat(watchRepository.count()).isGreaterThanOrEqualTo(100);
 
         assertThat(watchSubmissionRepository.existsByBrandNormalizedAndModelNormalizedAndStatus(
                 watchNameNormalizer.normalize("Lorier"),
                 watchNameNormalizer.normalize("Neptune IV"),
                 WatchSubmissionStatus.PENDING
         )).isTrue();
+        assertThat(watchSubmissionRepository.count()).isGreaterThanOrEqualTo(24);
 
         assertThat(postRepository.findByStatusAndDeletedAtIsNull(PostStatus.APPROVED, PageRequest.of(0, 10)).getContent())
                 .hasSizeGreaterThanOrEqualTo(2);
+        assertThat(postRepository.count()).isGreaterThanOrEqualTo(70);
         assertThat(articleRepository.findByDeletedAtIsNull(PageRequest.of(0, 10)).getContent())
                 .hasSizeGreaterThanOrEqualTo(2);
+        assertThat(articleRepository.count()).isGreaterThanOrEqualTo(24);
+        assertThat(reviewRepository.count()).isGreaterThanOrEqualTo(240);
+        assertThat(watchCommentRepository.count()).isGreaterThanOrEqualTo(140);
+        assertThat(postCommentRepository.count()).isGreaterThanOrEqualTo(120);
     }
 }
