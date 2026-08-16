@@ -32,10 +32,10 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 - [x] Wyszukiwanie postow po tekscie.
 - [x] Filtrowanie postow po hashtagu.
 - [x] Szczegoly posta.
-- [ ] Tworzenie posta przez zalogowanego uzytkownika.
-- [ ] Formularz hashtagow przy tworzeniu/edycji posta.
-- [ ] Widok "moje posty" z filtrami statusu: `PENDING`, `APPROVED`, `REJECTED`.
-- [ ] Pokazanie powodu odrzucenia posta.
+- [x] Tworzenie posta przez zalogowanego uzytkownika.
+- [x] Formularz hashtagow przy tworzeniu/edycji posta.
+- [x] Widok "moje posty" z filtrami statusu: `PENDING`, `APPROVED`, `REJECTED`.
+- [x] Pokazanie powodu odrzucenia posta.
 - [ ] Edycja wlasnego posta.
 - [ ] Usuwanie wlasnego posta.
 - [ ] Upload zdjecia do posta.

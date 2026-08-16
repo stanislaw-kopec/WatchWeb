@@ -1,4 +1,14 @@
-import { AlertCircle, CalendarDays, Mail, RefreshCw, ShieldCheck, UserCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  CalendarDays,
+  ListChecks,
+  Mail,
+  PlusCircle,
+  RefreshCw,
+  ShieldCheck,
+  UserCircle,
+} from 'lucide-react'
+import { Link } from 'react-router'
 
 import { useCurrentUser } from '@/entities/user/api/useCurrentUser'
 import type { User } from '@/entities/user/model/types'
@@ -100,6 +110,26 @@ export function ProfilePage() {
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>Access token jest wysyłany automatycznie w nagłówku `Authorization`.</p>
             <p>Jeśli backend zwróci `401`, frontend spróbuje odświeżyć token przez refresh token i ponowi request.</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Społeczność</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button asChild className="w-full">
+              <Link to="/posts/new">
+                <PlusCircle className="size-4" aria-hidden="true" />
+                Dodaj post
+              </Link>
+            </Button>
+            <Button asChild className="w-full" variant="outline">
+              <Link to="/me/posts">
+                <ListChecks className="size-4" aria-hidden="true" />
+                Moje posty
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </section>

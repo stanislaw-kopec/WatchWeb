@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { getPost, getPosts } from '@/entities/post/api/postApi'
-import type { PostListParams } from '@/entities/post/api/postApi'
+import { getMyPosts, getPost, getPosts } from '@/entities/post/api/postApi'
+import type { MyPostListParams, PostListParams } from '@/entities/post/api/postApi'
 
 export function usePosts(params: PostListParams = {}) {
   return useQuery({
@@ -15,5 +15,12 @@ export function usePost(postId: string | undefined) {
     enabled: Boolean(postId),
     queryKey: ['post', postId],
     queryFn: () => getPost(postId as string),
+  })
+}
+
+export function useMyPosts(params: MyPostListParams = {}) {
+  return useQuery({
+    queryKey: ['my-posts', params],
+    queryFn: () => getMyPosts(params),
   })
 }

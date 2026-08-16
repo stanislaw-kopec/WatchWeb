@@ -90,7 +90,7 @@ export function HomePage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-            <p>Tworzenie, edycja i usuwanie własnych postów.</p>
+            <p>Edycja, usuwanie i upload zdjęć do własnych postów.</p>
             <p>Zgłoszenia nowych zegarków do katalogu.</p>
             <p>Moderacja treści oraz kolejek zgłoszeń.</p>
           </div>

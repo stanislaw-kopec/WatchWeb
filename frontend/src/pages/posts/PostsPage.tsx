@@ -1,6 +1,15 @@
-import { AlertCircle, Hash, MessageSquareText, RefreshCw, Search, UserRound } from 'lucide-react'
+import {
+  AlertCircle,
+  Hash,
+  ListChecks,
+  MessageSquareText,
+  PlusCircle,
+  RefreshCw,
+  Search,
+  UserRound,
+} from 'lucide-react'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import { usePosts } from '@/entities/post/api/usePosts'
 import type { Post } from '@/entities/post/model/types'
@@ -13,6 +22,7 @@ import {
 } from '@/features/post-list/model/postListFilters'
 import type { PostListFilters as PostListFiltersValue } from '@/features/post-list/model/postListFilters'
 import { PostListFilters } from '@/features/post-list/ui/PostListFilters'
+import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -21,12 +31,19 @@ import { Skeleton } from '@/shared/ui/skeleton'
 
 export function PostsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { isAuthenticated } = useAuthSession()
   const searchState = useMemo(() => parsePostListSearchParams(searchParams), [searchParams])
   const listParams = useMemo(() => toPostListParams(searchState), [searchState])
   const postsQuery = usePosts(listParams)
   const posts = postsQuery.data?.content ?? []
   const activeFiltersCount = countActivePostFilters(searchState)
   const visibleStats = getVisibleStats(posts)
+  const createPostHref = isAuthenticated
+    ? '/posts/new'
+    : `/login?redirectTo=${encodeURIComponent('/posts/new')}`
+  const myPostsHref = isAuthenticated
+    ? '/me/posts'
+    : `/login?redirectTo=${encodeURIComponent('/me/posts')}`
 
   function applyFilters(filters: PostListFiltersValue, pageSize: number) {
     setSearchParams(buildPostListSearchParams(filters, 0, pageSize))
@@ -53,6 +70,20 @@ export function PostsPage() {
               Publiczny strumień zaakceptowanych wpisów użytkowników. Możesz wyszukiwać po
               treści, filtrować po hashtagu i przejść do dyskusji pod konkretnym postem.
             </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild>
+                <Link to={createPostHref}>
+                  <PlusCircle className="size-4" aria-hidden="true" />
+                  Dodaj post
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to={myPostsHref}>
+                  <ListChecks className="size-4" aria-hidden="true" />
+                  Moje posty
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 
