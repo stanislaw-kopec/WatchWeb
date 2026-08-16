@@ -11,6 +11,8 @@ import {
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
+import { useHashtags } from '@/entities/hashtag/api/useHashtags'
+import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
 import { usePosts } from '@/entities/post/api/usePosts'
 import type { Post } from '@/entities/post/model/types'
 import { PostCard } from '@/entities/post/ui/PostCard'
@@ -35,7 +37,9 @@ export function PostsPage() {
   const searchState = useMemo(() => parsePostListSearchParams(searchParams), [searchParams])
   const listParams = useMemo(() => toPostListParams(searchState), [searchState])
   const postsQuery = usePosts(listParams)
+  const hashtagsQuery = useHashtags({ size: 12, sort: 'name,asc' })
   const posts = postsQuery.data?.content ?? []
+  const hashtags = hashtagsQuery.data?.content.map((hashtag) => hashtag.name) ?? []
   const activeFiltersCount = countActivePostFilters(searchState)
   const visibleStats = getVisibleStats(posts)
   const createPostHref = isAuthenticated
@@ -108,6 +112,25 @@ export function PostsPage() {
         pageSize={searchState.size}
         value={searchState}
       />
+
+      <Card>
+        <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Hashtagi</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {hashtagsQuery.isFetching ? 'Odświeżanie listy' : 'Szybkie filtrowanie postów'}
+            </p>
+          </div>
+          <Badge variant="secondary">{formatNumber(hashtagsQuery.data?.totalElements)}</Badge>
+        </CardHeader>
+        <CardContent>
+          {hashtags.length > 0 ? (
+            <HashtagLinkList hashtags={hashtags} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Hashtagi pojawią się po dodaniu postów.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

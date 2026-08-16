@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   CalendarDays,
   FileText,
-  Hash,
   MessageCircle,
   MessageSquareText,
   UserRound,
@@ -12,6 +11,7 @@ import { Link, useParams } from 'react-router'
 
 import { usePostComments } from '@/entities/comment/api/usePostComments'
 import type { PostComment } from '@/entities/comment/model/types'
+import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
 import { usePost } from '@/entities/post/api/usePosts'
 import type { Post } from '@/entities/post/model/types'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
@@ -110,18 +110,7 @@ export function PostDetailsPage() {
             </CardHeader>
             <CardContent>
               {post.hashtags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {post.hashtags.map((hashtag) => (
-                    <Link
-                      className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground transition hover:border-primary/40"
-                      key={hashtag}
-                      to={`/posts?hashtag=${encodeURIComponent(hashtag)}`}
-                    >
-                      <Hash className="size-3" aria-hidden="true" />
-                      {hashtag}
-                    </Link>
-                  ))}
-                </div>
+                <HashtagLinkList hashtags={post.hashtags} />
               ) : (
                 <p className="text-sm text-muted-foreground">Ten post nie ma hashtagów.</p>
               )}

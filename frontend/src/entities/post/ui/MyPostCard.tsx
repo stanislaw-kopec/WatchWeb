@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { ArrowRight, CalendarDays, Hash, MessageSquareText } from 'lucide-react'
+import { ArrowRight, CalendarDays, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
 import { POST_STATUS_DESCRIPTIONS } from '@/entities/post/model/postStatus'
 import type { Post } from '@/entities/post/model/types'
 import { PostStatusBadge } from '@/entities/post/ui/PostStatusBadge'
@@ -45,17 +46,7 @@ export function MyPostCard({ post, actions }: MyPostCardProps) {
           </div>
 
           {post.hashtags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {post.hashtags.map((hashtag) => (
-                <span
-                  className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground"
-                  key={hashtag}
-                >
-                  <Hash className="size-3" aria-hidden="true" />
-                  {hashtag}
-                </span>
-              ))}
-            </div>
+            <HashtagLinkList hashtags={post.hashtags} />
           ) : null}
 
           {post.status === 'REJECTED' && post.rejectionReason ? (

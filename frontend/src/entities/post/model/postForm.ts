@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { formatHashtagInput } from '@/entities/hashtag/model/hashtagInput'
 import { parsePostHashtags } from '@/entities/post/model/parsePostHashtags'
 
 export const POST_TITLE_MAX_LENGTH = 200
@@ -44,5 +45,5 @@ export const postFormSchema = z
 export type PostFormValues = z.infer<typeof postFormSchema>
 
 export function formatPostHashtagsInput(hashtags: string[]) {
-  return hashtags.join(', ')
+  return formatHashtagInput(hashtags)
 }

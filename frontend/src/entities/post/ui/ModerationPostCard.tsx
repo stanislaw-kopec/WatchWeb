@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { ArrowRight, CalendarDays, Hash, MessageSquareText } from 'lucide-react'
+import { ArrowRight, CalendarDays, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
 import type { Post } from '@/entities/post/model/types'
 import { PostStatusBadge } from '@/entities/post/ui/PostStatusBadge'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
@@ -49,17 +50,7 @@ export function ModerationPostCard({ post, actions }: ModerationPostCardProps) {
           </div>
 
           {post.hashtags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {post.hashtags.map((hashtag) => (
-                <span
-                  className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground"
-                  key={hashtag}
-                >
-                  <Hash className="size-3" aria-hidden="true" />
-                  {hashtag}
-                </span>
-              ))}
-            </div>
+            <HashtagLinkList hashtags={post.hashtags} />
           ) : null}
 
           {post.status === 'REJECTED' && post.rejectionReason ? (

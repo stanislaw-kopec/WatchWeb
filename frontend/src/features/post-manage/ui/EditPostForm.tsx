@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Save, X } from 'lucide-react'
-import { useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 
+import { HashtagAutocompleteInput } from '@/entities/hashtag/ui/HashtagAutocompleteInput'
 import { updatePost } from '@/entities/post/api/postApi'
 import {
   formatPostHashtagsInput,
@@ -94,7 +95,18 @@ export function EditPostForm({ post, onCancel, onUpdated }: EditPostFormProps) {
 
       <label className="grid gap-2">
         <span className="text-sm font-medium text-foreground">Hashtagi</span>
-        <Input placeholder="seiko, diver, quartz" {...form.register('hashtags')} />
+        <Controller
+          control={form.control}
+          name="hashtags"
+          render={({ field }) => (
+            <HashtagAutocompleteInput
+              disabled={updatePostMutation.isPending}
+              onBlur={field.onBlur}
+              onChange={field.onChange}
+              value={field.value}
+            />
+          )}
+        />
         <FormFieldError message={form.formState.errors.hashtags?.message} />
       </label>
 

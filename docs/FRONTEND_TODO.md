@@ -116,10 +116,10 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Hashtagi
 
-- [ ] Encja/API frontendu dla hashtagow.
-- [ ] Lista hashtagow.
-- [ ] Autocomplete hashtagow przy tworzeniu posta.
-- [ ] Klikniecie hashtagu prowadzi do listy postow z filtrem.
+- [x] Encja/API frontendu dla hashtagow.
+- [x] Lista hashtagow.
+- [x] Autocomplete hashtagow przy tworzeniu posta.
+- [x] Klikniecie hashtagu prowadzi do listy postow z filtrem.
 
 ### Wyszukiwanie globalne
 
