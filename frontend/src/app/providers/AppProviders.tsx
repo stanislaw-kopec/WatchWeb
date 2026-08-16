@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
 import { BrowserRouter } from 'react-router'
 
+import { AuthSessionProvider } from '@/features/auth/model/AuthSessionProvider'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -15,7 +17,9 @@ const queryClient = new QueryClient({
 export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <AuthSessionProvider>
+        <BrowserRouter>{children}</BrowserRouter>
+      </AuthSessionProvider>
     </QueryClientProvider>
   )
 }

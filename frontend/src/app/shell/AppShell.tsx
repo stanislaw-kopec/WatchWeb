@@ -1,6 +1,8 @@
-import { Bell, Compass, Newspaper, Search, ShieldCheck, UserCircle, Watch } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router'
+import { Bell, Compass, LogIn, LogOut, Newspaper, Search, ShieldCheck, UserCircle, UserPlus, Watch } from 'lucide-react'
+import { Link, NavLink, Outlet } from 'react-router'
 
+import { USER_ROLE_LABELS } from '@/features/auth/model/roleLabels'
+import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 
@@ -12,6 +14,8 @@ const navigation = [
 ]
 
 export function AppShell() {
+  const { isAuthenticated, signOut, user } = useAuthSession()
+
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
       <aside className="hidden border-r border-border bg-card/85 px-5 py-6 backdrop-blur lg:block">
@@ -58,9 +62,35 @@ export function AppShell() {
             <Button variant="ghost" size="icon" aria-label="Powiadomienia">
               <Bell className="size-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Profil">
-              <UserCircle className="size-5" aria-hidden="true" />
-            </Button>
+            {isAuthenticated && user ? (
+              <>
+                <div className="hidden min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 sm:flex">
+                  <UserCircle className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{user.username}</p>
+                    <p className="text-xs text-muted-foreground">{USER_ROLE_LABELS[user.role]}</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" aria-label="Wyloguj" onClick={() => void signOut()}>
+                  <LogOut className="size-4" aria-hidden="true" />
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/login">
+                    <LogIn className="size-4" aria-hidden="true" />
+                    <span className="hidden sm:inline">Zaloguj</span>
+                  </Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link to="/register">
+                    <UserPlus className="size-4" aria-hidden="true" />
+                    <span className="hidden md:inline">Rejestracja</span>
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           <nav className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto lg:hidden" aria-label="Nawigacja">
