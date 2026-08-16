@@ -2,11 +2,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
-import { z } from 'zod'
 
 import { createPost } from '@/entities/post/api/postApi'
+import {
+  POST_CONTENT_MAX_LENGTH,
+  POST_TITLE_MAX_LENGTH,
+  postFormSchema,
+} from '@/entities/post/model/postForm'
+import type { PostFormValues } from '@/entities/post/model/postForm'
+import { parsePostHashtags } from '@/entities/post/model/parsePostHashtags'
 import type { Post } from '@/entities/post/model/types'
-import { parsePostHashtags } from '@/features/post-create/model/parsePostHashtags'
 import { FormFieldError } from '@/features/auth/ui/FormFieldError'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -14,50 +19,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 
-const createPostSchema = z
-  .object({
-    title: z
-      .string()
-      .trim()
-      .min(1, 'Wpisz tytuł posta.')
-      .max(200, 'Tytuł może mieć maksymalnie 200 znaków.'),
-    content: z
-      .string()
-      .trim()
-      .min(1, 'Wpisz treść posta.')
-      .max(10000, 'Post może mieć maksymalnie 10000 znaków.'),
-    hashtags: z.string(),
-  })
-  .superRefine((values, context) => {
-    const hashtags = parsePostHashtags(values.hashtags)
-
-    if (hashtags.length > 10) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Możesz dodać maksymalnie 10 hashtagów.',
-        path: ['hashtags'],
-      })
-    }
-
-    if (hashtags.some((hashtag) => hashtag.length > 100)) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Pojedynczy hashtag może mieć maksymalnie 100 znaków.',
-        path: ['hashtags'],
-      })
-    }
-  })
-
-type CreatePostFormValues = z.infer<typeof createPostSchema>
-
 type CreatePostFormProps = {
   onCreated?: (post: Post) => void
 }
 
 export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const queryClient = useQueryClient()
-  const form = useForm<CreatePostFormValues>({
-    resolver: zodResolver(createPostSchema),
+  const form = useForm<PostFormValues>({
+    resolver: zodResolver(postFormSchema),
     defaultValues: {
       title: '',
       content: '',
@@ -70,7 +39,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const parsedHashtags = parsePostHashtags(hashtagsValue)
 
   const createPostMutation = useMutation({
-    mutationFn: (values: CreatePostFormValues) =>
+    mutationFn: (values: PostFormValues) =>
       createPost({
         title: values.title.trim(),
         content: values.content.trim(),
@@ -90,7 +59,7 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
     },
   })
 
-  function handleSubmit(values: CreatePostFormValues) {
+  function handleSubmit(values: PostFormValues) {
     createPostMutation.mutate(values)
   }
 
@@ -104,13 +73,15 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
           <label className="grid gap-2">
             <span className="text-sm font-medium text-foreground">Tytuł</span>
             <Input
-              maxLength={200}
+              maxLength={POST_TITLE_MAX_LENGTH}
               placeholder="Np. pierwszy miesiąc z Seiko Alpinist"
               {...form.register('title')}
             />
             <div className="flex items-center justify-between gap-3">
               <FormFieldError message={form.formState.errors.title?.message} />
-              <p className="ml-auto text-xs text-muted-foreground">{title.length}/200</p>
+              <p className="ml-auto text-xs text-muted-foreground">
+                {title.length}/{POST_TITLE_MAX_LENGTH}
+              </p>
             </div>
           </label>
 
@@ -118,13 +89,15 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
             <span className="text-sm font-medium text-foreground">Treść</span>
             <Textarea
               className="min-h-72"
-              maxLength={10000}
+              maxLength={POST_CONTENT_MAX_LENGTH}
               placeholder="Opisz obserwacje, pytanie albo historię związaną z zegarkiem."
               {...form.register('content')}
             />
             <div className="flex items-center justify-between gap-3">
               <FormFieldError message={form.formState.errors.content?.message} />
-              <p className="ml-auto text-xs text-muted-foreground">{content.length}/10000</p>
+              <p className="ml-auto text-xs text-muted-foreground">
+                {content.length}/{POST_CONTENT_MAX_LENGTH}
+              </p>
             </div>
           </label>
 

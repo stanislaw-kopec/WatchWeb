@@ -36,9 +36,9 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 - [x] Formularz hashtagow przy tworzeniu/edycji posta.
 - [x] Widok "moje posty" z filtrami statusu: `PENDING`, `APPROVED`, `REJECTED`.
 - [x] Pokazanie powodu odrzucenia posta.
-- [ ] Edycja wlasnego posta.
-- [ ] Usuwanie wlasnego posta.
-- [ ] Upload zdjecia do posta.
+- [x] Edycja wlasnego posta.
+- [x] Usuwanie wlasnego posta.
+- [x] Upload zdjecia do posta.
 - [x] Lista komentarzy pod postem.
 - [x] Dodawanie komentarza i odpowiedzi pod postem.
 - [ ] Usuwanie komentarzy pod postem.

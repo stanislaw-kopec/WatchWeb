@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ArrowRight, CalendarDays, Hash, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
@@ -10,9 +11,10 @@ import { Card, CardContent } from '@/shared/ui/card'
 
 type MyPostCardProps = {
   post: Post
+  actions?: ReactNode
 }
 
-export function MyPostCard({ post }: MyPostCardProps) {
+export function MyPostCard({ post, actions }: MyPostCardProps) {
   return (
     <Card className="overflow-hidden">
       <div className="grid gap-0 lg:grid-cols-[240px_1fr]">
@@ -73,6 +75,8 @@ export function MyPostCard({ post }: MyPostCardProps) {
               </Button>
             ) : null}
           </div>
+
+          {actions ? <div className="border-t border-border pt-4">{actions}</div> : null}
         </CardContent>
       </div>
     </Card>

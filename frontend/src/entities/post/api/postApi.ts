@@ -23,6 +23,8 @@ export type CreatePostRequest = {
   hashtags: string[]
 }
 
+export type UpdatePostRequest = CreatePostRequest
+
 export function getPosts(params: PostListParams = {}) {
   return getPostPage('/api/posts', params)
 }
@@ -39,6 +41,29 @@ export function createPost(request: CreatePostRequest) {
   return httpClient<Post>('/api/posts', {
     method: 'POST',
     body: JSON.stringify(request),
+  })
+}
+
+export function updatePost(postId: string, request: UpdatePostRequest) {
+  return httpClient<Post>(`/api/posts/${postId}`, {
+    method: 'PUT',
+    body: JSON.stringify(request),
+  })
+}
+
+export function updatePostImage(postId: string, file: File) {
+  const formData = new FormData()
+  formData.set('file', file)
+
+  return httpClient<Post>(`/api/posts/${postId}/image`, {
+    method: 'PUT',
+    body: formData,
+  })
+}
+
+export function deletePost(postId: string) {
+  return httpClient<void>(`/api/posts/${postId}`, {
+    method: 'DELETE',
   })
 }
 

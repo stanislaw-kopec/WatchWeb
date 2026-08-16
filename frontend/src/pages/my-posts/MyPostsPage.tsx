@@ -11,6 +11,7 @@ import {
 } from '@/features/my-posts/model/myPostListFilters'
 import type { MyPostStatusFilter as MyPostStatusFilterValue } from '@/features/my-posts/model/myPostListFilters'
 import { MyPostStatusFilter } from '@/features/my-posts/ui/MyPostStatusFilter'
+import { MyPostActions } from '@/features/post-manage/ui/MyPostActions'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -125,7 +126,11 @@ export function MyPostsPage() {
         {posts.length > 0 ? (
           <div className="space-y-4">
             {posts.map((post) => (
-              <MyPostCard key={post.id} post={post} />
+              <MyPostCard
+                actions={<MyPostActions post={post} />}
+                key={post.id}
+                post={post}
+              />
             ))}
           </div>
         ) : null}
