@@ -8,26 +8,37 @@ import {
   Search,
   ShieldCheck,
   UserCircle,
+  UserCog,
   UserPlus,
   Watch,
 } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router'
 
+import type { UserRole } from '@/entities/user/model/types'
 import { USER_ROLE_LABELS } from '@/features/auth/model/roleLabels'
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 
-const navigation = [
+type NavigationItem = {
+  label: string
+  href: string
+  icon: typeof Compass
+  allowedRoles?: UserRole[]
+}
+
+const navigation: NavigationItem[] = [
   { label: 'Start', href: '/', icon: Compass },
   { label: 'Katalog', href: '/watches', icon: Watch },
   { label: 'Posty', href: '/posts', icon: MessageSquareText },
   { label: 'Artykuły', href: '/articles', icon: Newspaper },
-  { label: 'Moderacja', href: '/moderation', icon: ShieldCheck },
+  { label: 'Moderacja', href: '/moderation', icon: ShieldCheck, allowedRoles: ['ROLE_MODERATOR', 'ROLE_ADMIN'] },
+  { label: 'Admin', href: '/admin/users', icon: UserCog, allowedRoles: ['ROLE_ADMIN'] },
 ]
 
 export function AppShell() {
   const { isAuthenticated, signOut, user } = useAuthSession()
+  const visibleNavigation = navigation.filter((item) => canSeeNavigationItem(item, user?.role))
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
@@ -43,7 +54,7 @@ export function AppShell() {
         </div>
 
         <nav className="mt-8 space-y-1">
-          {navigation.map((item) => (
+          {visibleNavigation.map((item) => (
             <NavLink
               key={item.href}
               to={item.href}
@@ -110,7 +121,7 @@ export function AppShell() {
           </div>
 
           <nav className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto lg:hidden" aria-label="Nawigacja">
-            {navigation.map((item) => (
+            {visibleNavigation.map((item) => (
               <NavLink
                 key={item.href}
                 to={item.href}
@@ -134,4 +145,8 @@ export function AppShell() {
       </div>
     </div>
   )
+}
+
+function canSeeNavigationItem(item: NavigationItem, role: UserRole | undefined) {
+  return !item.allowedRoles || (role ? item.allowedRoles.includes(role) : false)
 }

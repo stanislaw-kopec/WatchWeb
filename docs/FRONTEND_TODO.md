@@ -56,7 +56,7 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 ### Moderacja
 
 - [ ] Dodac trase `/moderation`, bo link jest juz widoczny w nawigacji.
-- [ ] Ograniczyc widocznosc linku "Moderacja" do `ROLE_MODERATOR` i `ROLE_ADMIN`.
+- [x] Ograniczyc widocznosc linku "Moderacja" do `ROLE_MODERATOR` i `ROLE_ADMIN`.
 - [ ] Widok kolejki postow do moderacji.
 - [ ] Filtrowanie postow moderacyjnych po statusie.
 - [ ] Zatwierdzanie posta.
@@ -109,10 +109,10 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 
 ### Admin
 
-- [ ] Panel admina uzytkownikow.
-- [ ] Lista uzytkownikow z paginacja.
-- [ ] Zmiana roli uzytkownika.
-- [ ] Zabezpieczenie UI przed odebraniem sobie roli admina.
+- [x] Panel admina uzytkownikow.
+- [x] Lista uzytkownikow z paginacja.
+- [x] Zmiana roli uzytkownika.
+- [x] Zabezpieczenie UI przed odebraniem sobie roli admina.
 
 ### Hashtagi
 
@@ -134,7 +134,7 @@ Ten plik jest zrodlem prawdy dla brakujacych widokow i akcji po stronie frontend
 - [ ] Wspolne komponenty dla pustych stanow.
 - [ ] Wspolne komponenty dla bledow i retry.
 - [ ] Wspolne komponenty formularzy dla pol tekstowych, uploadu plikow i statusow mutacji.
-- [ ] Role-based route guards dla `USER`, `JOURNALIST`, `MODERATOR`, `ADMIN`.
+- [x] Role-based route guards dla `USER`, `JOURNALIST`, `MODERATOR`, `ADMIN`.
 - [ ] Przejrzec teksty w UI i usunac techniczne opisy, ktore byly pomocne w fazie budowy.
 
 ## Sugerowana kolejnosc prac

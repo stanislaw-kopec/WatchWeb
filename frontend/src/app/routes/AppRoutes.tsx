@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router'
 
 import { AppShell } from '@/app/shell/AppShell'
+import { AdminUsersPage } from '@/pages/admin-users/AdminUsersPage'
 import { ArticleDetailsPage } from '@/pages/article-details/ArticleDetailsPage'
 import { ArticlesPage } from '@/pages/articles/ArticlesPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -15,6 +16,7 @@ import { ProfilePage } from '@/pages/profile/ProfilePage'
 import { WatchDetailsPage } from '@/pages/watch-details/WatchDetailsPage'
 import { WatchesPage } from '@/pages/watches/WatchesPage'
 import { RequireAuth } from '@/features/auth/ui/RequireAuth'
+import { RequireRole } from '@/features/auth/ui/RequireRole'
 
 export function AppRoutes() {
   return (
@@ -23,6 +25,14 @@ export function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path="articles" element={<ArticlesPage />} />
         <Route path="articles/:articleId" element={<ArticleDetailsPage />} />
+        <Route
+          path="admin/users"
+          element={
+            <RequireRole allowedRoles={['ROLE_ADMIN']}>
+              <AdminUsersPage />
+            </RequireRole>
+          }
+        />
         <Route path="posts" element={<PostsPage />} />
         <Route
           path="posts/new"
