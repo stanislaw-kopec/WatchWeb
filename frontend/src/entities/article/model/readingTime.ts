@@ -1,3 +1,5 @@
+import { articleContentToText } from '@/entities/article/model/articleContent'
+
 export function estimateReadingTime(content: string) {
   const words = countWords(content)
   const minutes = Math.max(1, Math.ceil(words / 220))
@@ -6,5 +8,5 @@ export function estimateReadingTime(content: string) {
 }
 
 export function countWords(content: string) {
-  return content.trim().split(/\s+/).filter(Boolean).length
+  return articleContentToText(content).split(/\s+/).filter(Boolean).length
 }

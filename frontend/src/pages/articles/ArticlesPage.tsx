@@ -94,12 +94,17 @@ export function ArticlesPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {canCreateArticle ? (
-              <Button asChild>
-                <Link to="/articles/new">
-                  <Plus className="size-4" aria-hidden="true" />
-                  Nowy artykuł
-                </Link>
-              </Button>
+              <>
+                <Button asChild variant="outline">
+                  <Link to="/me/articles">Moje artykuły</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/articles/new">
+                    <Plus className="size-4" aria-hidden="true" />
+                    Nowy artykuł
+                  </Link>
+                </Button>
+              </>
             ) : null}
             <Button
               disabled={articlesQuery.isFetching}

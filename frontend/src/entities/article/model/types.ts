@@ -1,3 +1,5 @@
+export type ArticleStatus = 'DRAFT' | 'PUBLISHED'
+
 export type Article = {
   id: string
   authorId: string
@@ -5,6 +7,8 @@ export type Article = {
   title: string
   content: string
   headerImageUrl: string | null
+  status: ArticleStatus
+  publishedAt: string | null
   createdAt: string
   updatedAt: string
 }

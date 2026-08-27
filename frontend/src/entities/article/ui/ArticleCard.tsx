@@ -2,6 +2,7 @@ import { ArrowRight, CalendarDays, UserRound } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { estimateReadingTime } from '@/entities/article/model/readingTime'
+import { articleContentToText } from '@/entities/article/model/articleContent'
 import type { Article } from '@/entities/article/model/types'
 import { ArticleHeroVisual } from '@/entities/article/ui/ArticleHeroVisual'
 import { formatDateTime } from '@/shared/lib/date'
@@ -24,7 +25,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             <Badge variant="secondary">Artykuł</Badge>
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <CalendarDays className="size-3.5" aria-hidden="true" />
-              {formatDateTime(article.createdAt)}
+              {formatDateTime(article.publishedAt ?? article.createdAt)}
             </span>
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <UserRound className="size-3.5" aria-hidden="true" />
@@ -39,7 +40,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
               </Link>
             </h3>
             <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-              {article.content}
+              {articleContentToText(article.content)}
             </p>
           </div>
 

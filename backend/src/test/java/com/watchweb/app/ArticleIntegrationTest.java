@@ -1,6 +1,8 @@
 package com.watchweb.app;
 import com.watchweb.app.domain.article.dto.CreateArticleRequest;
+import com.watchweb.app.domain.article.dto.SaveArticleDraftRequest;
 import com.watchweb.app.domain.article.dto.UpdateArticleRequest;
+import com.watchweb.app.domain.article.entity.ArticleStatus;
 import com.watchweb.app.domain.article.repository.ArticleRepository;
 import com.watchweb.app.domain.article.service.ArticleService;
 import com.watchweb.app.domain.auth.dto.RegisterRequest;
@@ -80,6 +82,122 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ArticleIntegrationTest extends AbstractIntegrationTest {
     @Test
+    void journalistSavesPrivateDraftAndSeesItOnlyInOwnList() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articledraftjournalist",
+                "articledraftjournalist@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+
+        var draft = articleService.createDraft(
+                journalist.getId(),
+                new SaveArticleDraftRequest("", "")
+        );
+
+        assertThat(draft.status()).isEqualTo(ArticleStatus.DRAFT);
+        assertThat(draft.publishedAt()).isNull();
+        assertThat(articleService.listMine(journalist.getId(), ArticleStatus.DRAFT, PageRequest.of(0, 20)).getContent())
+                .anySatisfy(article -> assertThat(article.id()).isEqualTo(draft.id()));
+        assertThat(articleService.list(PageRequest.of(0, 20)).getContent())
+                .noneSatisfy(article -> assertThat(article.id()).isEqualTo(draft.id()));
+        assertThatThrownBy(() -> articleService.getById(draft.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Article not found: " + draft.id());
+    }
+
+    @Test
+    void journalistUpdatesAndPublishesDraftWithoutModeration() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articlepublishdraftjournalist",
+                "articlepublishdraftjournalist@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var draft = articleService.createDraft(
+                journalist.getId(),
+                new SaveArticleDraftRequest("First title", "First content")
+        );
+
+        var updatedDraft = articleService.updateDraft(
+                draft.id(),
+                journalist.getId(),
+                false,
+                new SaveArticleDraftRequest("Ready title", "<p>Ready <strong>content</strong>.</p>")
+        );
+        var published = articleService.publish(
+                draft.id(),
+                journalist.getId(),
+                false,
+                new CreateArticleRequest(updatedDraft.title(), updatedDraft.content())
+        );
+
+        assertThat(published.status()).isEqualTo(ArticleStatus.PUBLISHED);
+        assertThat(published.publishedAt()).isNotNull();
+        assertThat(published.content()).contains("<strong>content</strong>");
+        assertThat(articleService.getById(draft.id()).id()).isEqualTo(draft.id());
+    }
+
+    @Test
+    void sanitizesRichArticleContentBeforeSaving() {
+        var journalist = userRepository.saveAndFlush(new User(
+                "articlesanitizejournalist",
+                "articlesanitizejournalist@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+
+        var article = articleService.create(
+                journalist.getId(),
+                new CreateArticleRequest(
+                        "Safe article",
+                        "<h2 onclick=\"alert(1)\">Heading</h2><script>alert(1)</script>"
+                                + "<p><a href=\"javascript:alert(1)\">bad</a><strong>safe</strong></p>"
+                                + "<img src=\"/api/files/article-images/example.webp\" onerror=\"alert(1)\">"
+                )
+        );
+
+        assertThat(article.content())
+                .contains("<h2>Heading</h2>", "<strong>safe</strong>", "/api/files/article-images/example.webp")
+                .doesNotContain("onclick", "onerror", "javascript:", "<script");
+    }
+
+    @Test
+    void anotherJournalistCannotReadPrivateDraftForManagement() {
+        var owner = userRepository.saveAndFlush(new User(
+                "articledraftowner",
+                "articledraftowner@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var otherJournalist = userRepository.saveAndFlush(new User(
+                "articledraftother",
+                "articledraftother@example.com",
+                "{bcrypt}hash",
+                Role.ROLE_JOURNALIST
+        ));
+        var draft = articleService.createDraft(owner.getId(), new SaveArticleDraftRequest("Private", "Secret"));
+
+        assertThatThrownBy(() -> articleService.getMineById(draft.id(), otherJournalist.getId(), false))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Article belongs to another user");
+    }
+
+    @Test
+    void uploadsImageForRichArticleContent() {
+        var file = new MockMultipartFile(
+                "file",
+                "inline.png",
+                "image/png",
+                "inline-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = articleService.uploadContentImage(file);
+
+        assertThat(response.url()).startsWith("/api/files/article-images/").endsWith(".png");
+    }
+
+    @Test
     void journalistCreatesArticle() {
         var journalist = userRepository.saveAndFlush(new User(
                 "articlejournalist",
@@ -96,6 +214,8 @@ class ArticleIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.id()).isNotNull();
         assertThat(response.authorId()).isEqualTo(journalist.getId());
         assertThat(response.title()).isEqualTo("Microbrand guide");
+        assertThat(response.status()).isEqualTo(ArticleStatus.PUBLISHED);
+        assertThat(response.publishedAt()).isNotNull();
         assertThat(articleRepository.findById(response.id()).orElseThrow().getDeletedAt()).isNull();
     }
 

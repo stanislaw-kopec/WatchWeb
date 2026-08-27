@@ -1,8 +1,11 @@
 package com.watchweb.app.domain.article.controller;
 
+import com.watchweb.app.domain.article.dto.ArticleImageResponse;
 import com.watchweb.app.domain.article.dto.ArticleResponse;
 import com.watchweb.app.domain.article.dto.CreateArticleRequest;
+import com.watchweb.app.domain.article.dto.SaveArticleDraftRequest;
 import com.watchweb.app.domain.article.dto.UpdateArticleRequest;
+import com.watchweb.app.domain.article.entity.ArticleStatus;
 import com.watchweb.app.domain.article.service.ArticleService;
 import com.watchweb.app.exception.ApiErrorResponse;
 import com.watchweb.app.security.UserPrincipal;
@@ -67,6 +70,30 @@ public class ArticleController {
         return articleService.search(query, pageable);
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "List my articles", description = "Returns the authenticated author's drafts and published articles.")
+    @SecurityRequirement(name = "bearerAuth")
+    public Page<ArticleResponse> listMine(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Parameter(description = "Optional article status filter", example = "DRAFT")
+            @RequestParam(required = false) ArticleStatus status,
+            @ParameterObject @PageableDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return articleService.listMine(principal.getId(), status, pageable);
+    }
+
+    @GetMapping("/me/{id}")
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "Get an article for management", description = "Returns an owned article, including a private draft. Admins may manage any article.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ArticleResponse getMineById(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return articleService.getMineById(id, principal.getId(), canManageAnyArticle(principal));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get article by id", description = "Returns one published article by identifier.")
     @ApiResponses({
@@ -122,6 +149,18 @@ public class ArticleController {
         return articleService.create(principal.getId(), request);
     }
 
+    @PostMapping("/drafts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "Create article draft", description = "Saves a private working copy without publishing it.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ArticleResponse createDraft(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody SaveArticleDraftRequest request
+    ) {
+        return articleService.createDraft(principal.getId(), request);
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
     @Operation(summary = "Update article", description = "Updates an article owned by the authenticated journalist or any article for admins.")
@@ -160,6 +199,42 @@ public class ArticleController {
             @Valid @RequestBody UpdateArticleRequest request
     ) {
         return articleService.update(id, principal.getId(), canManageAnyArticle(principal), request);
+    }
+
+    @PutMapping("/{id}/draft")
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "Update article draft", description = "Saves changes to a private draft without publishing it.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ArticleResponse updateDraft(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody SaveArticleDraftRequest request
+    ) {
+        return articleService.updateDraft(id, principal.getId(), canManageAnyArticle(principal), request);
+    }
+
+    @PostMapping("/{id}/publish")
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "Publish article draft", description = "Publishes an owned draft immediately without moderation.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ArticleResponse publish(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody CreateArticleRequest request
+    ) {
+        return articleService.publish(id, principal.getId(), canManageAnyArticle(principal), request);
+    }
+
+    @PostMapping(path = "/content-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('JOURNALIST', 'ADMIN')")
+    @Operation(summary = "Upload article content image", description = "Uploads a JPG, PNG or WEBP image for insertion into rich article content.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ArticleImageResponse uploadContentImage(
+            @Parameter(description = "Article content image file", required = true)
+            @RequestPart("file") MultipartFile file
+    ) {
+        return articleService.uploadContentImage(file);
     }
 
     @PutMapping(path = "/{id}/header-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

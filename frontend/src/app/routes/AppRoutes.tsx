@@ -1,15 +1,17 @@
-import { Route, Routes } from 'react-router'
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router'
 
 import { AppShell } from '@/app/shell/AppShell'
 import { AdminUsersPage } from '@/pages/admin-users/AdminUsersPage'
 import { ArticleCreatePage } from '@/pages/article-create/ArticleCreatePage'
 import { ArticleDetailsPage } from '@/pages/article-details/ArticleDetailsPage'
+import { ArticleEditPage } from '@/pages/article-edit/ArticleEditPage'
 import { ArticlesPage } from '@/pages/articles/ArticlesPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { ModerationPage } from '@/pages/moderation/ModerationPage'
 import { MyPostsPage } from '@/pages/my-posts/MyPostsPage'
+import { MyArticlesPage } from '@/pages/my-articles/MyArticlesPage'
 import { MyReviewsPage } from '@/pages/my-reviews/MyReviewsPage'
 import { MyWatchSubmissionsPage } from '@/pages/my-watch-submissions/MyWatchSubmissionsPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
@@ -27,10 +29,9 @@ import { WatchesPage } from '@/pages/watches/WatchesPage'
 import { RequireAuth } from '@/features/auth/ui/RequireAuth'
 import { RequireRole } from '@/features/auth/ui/RequireRole'
 
-export function AppRoutes() {
-  return (
-    <Routes>
-      <Route element={<AppShell />}>
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="articles" element={<ArticlesPage />} />
         <Route
@@ -42,6 +43,22 @@ export function AppRoutes() {
           }
         />
         <Route path="articles/:articleId" element={<ArticleDetailsPage />} />
+        <Route
+          path="me/articles"
+          element={
+            <RequireRole allowedRoles={['ROLE_JOURNALIST', 'ROLE_ADMIN']}>
+              <MyArticlesPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="me/articles/:articleId/edit"
+          element={
+            <RequireRole allowedRoles={['ROLE_JOURNALIST', 'ROLE_ADMIN']}>
+              <ArticleEditPage />
+            </RequireRole>
+          }
+        />
         <Route
           path="admin/users"
           element={
@@ -138,7 +155,12 @@ export function AppRoutes() {
         />
         <Route path="watches/:watchId" element={<WatchDetailsPage />} />
         <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
+    </Route>,
+  ),
+)
+
+export function AppRoutes() {
+  return (
+    <RouterProvider router={router} />
   )
 }

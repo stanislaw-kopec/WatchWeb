@@ -1,5 +1,6 @@
 import {
   Compass,
+  FilePenLine,
   LogIn,
   LogOut,
   MessageSquareText,
@@ -33,6 +34,7 @@ const navigation: NavigationItem[] = [
   { label: 'Katalog', href: '/watches', icon: Watch },
   { label: 'Posty', href: '/posts', icon: MessageSquareText },
   { label: 'Artykuły', href: '/articles', icon: Newspaper },
+  { label: 'Moje artykuły', href: '/me/articles', icon: FilePenLine, allowedRoles: ['ROLE_JOURNALIST', 'ROLE_ADMIN'] },
   { label: 'Moderacja', href: '/moderation', icon: ShieldCheck, allowedRoles: ['ROLE_MODERATOR', 'ROLE_ADMIN'] },
   { label: 'Admin', href: '/admin/users', icon: UserCog, allowedRoles: ['ROLE_ADMIN'] },
 ]

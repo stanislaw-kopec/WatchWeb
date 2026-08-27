@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  FilePenLine,
   ListChecks,
   Mail,
   PlusCircle,
@@ -117,6 +118,28 @@ export function ProfilePage() {
               </dl>
             </CardContent>
           </Card>
+
+          {user?.role === 'ROLE_JOURNALIST' || user?.role === 'ROLE_ADMIN' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Redakcja</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button asChild className="w-full">
+                  <Link to="/articles/new">
+                    <PlusCircle className="size-4" aria-hidden="true" />
+                    Napisz artykuł
+                  </Link>
+                </Button>
+                <Button asChild className="w-full" variant="outline">
+                  <Link to="/me/articles">
+                    <FilePenLine className="size-4" aria-hidden="true" />
+                    Moje artykuły
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardHeader>

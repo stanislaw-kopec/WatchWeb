@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router'
 
 import { useArticle } from '@/entities/article/api/useArticles'
 import { countWords, estimateReadingTime } from '@/entities/article/model/readingTime'
+import { articleContentToText } from '@/entities/article/model/articleContent'
 import { ArticleHeroVisual } from '@/entities/article/ui/ArticleHeroVisual'
+import { RichArticleContent } from '@/entities/article/ui/RichArticleContent'
 import type { User } from '@/entities/user/model/types'
 import { ArticleActions } from '@/features/article-manage/ui/ArticleActions'
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
@@ -57,7 +59,7 @@ export function ArticleDetailsPage() {
               </span>
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="size-4" aria-hidden="true" />
-                {formatDateTime(article.createdAt)}
+                {formatDateTime(article.publishedAt ?? article.createdAt)}
               </span>
             </div>
             <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-normal text-foreground md:text-5xl">
@@ -74,11 +76,7 @@ export function ArticleDetailsPage() {
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <article className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
-          <div className="space-y-5 text-base leading-8 text-foreground">
-            {getParagraphs(article.content).map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
+          <RichArticleContent className="text-base leading-8 text-foreground" content={article.content} />
         </article>
 
         <aside className="space-y-4">
@@ -149,15 +147,8 @@ function ArticleDetailsSkeleton() {
   )
 }
 
-function getParagraphs(content: string) {
-  return content
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
-}
-
 function getLead(content: string) {
-  const firstParagraph = getParagraphs(content)[0] ?? content
+  const firstParagraph = articleContentToText(content)
 
   return firstParagraph.length > 220 ? `${firstParagraph.slice(0, 217).trim()}...` : firstParagraph
 }

@@ -3,6 +3,8 @@ package com.watchweb.app.domain.article.entity;
 import com.watchweb.app.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -38,6 +40,13 @@ public class Article {
     @Column(name = "header_image_url", length = 500)
     private String headerImageUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private ArticleStatus status;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -51,9 +60,14 @@ public class Article {
     }
 
     public Article(User author, String title, String content) {
+        this(author, title, content, ArticleStatus.PUBLISHED);
+    }
+
+    public Article(User author, String title, String content, ArticleStatus status) {
         this.author = author;
         this.title = title;
         this.content = content;
+        this.status = status;
     }
 
     @PrePersist
@@ -61,6 +75,9 @@ public class Article {
         var now = Instant.now();
         createdAt = now;
         updatedAt = now;
+        if (status == ArticleStatus.PUBLISHED && publishedAt == null) {
+            publishedAt = now;
+        }
     }
 
     @PreUpdate
@@ -88,6 +105,14 @@ public class Article {
         return headerImageUrl;
     }
 
+    public ArticleStatus getStatus() {
+        return status;
+    }
+
+    public Instant getPublishedAt() {
+        return publishedAt;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -103,6 +128,24 @@ public class Article {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void updateDraft(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+    public void publish(String title, String content) {
+        this.title = title;
+        this.content = content;
+        this.status = ArticleStatus.PUBLISHED;
+        if (publishedAt == null) {
+            publishedAt = Instant.now();
+        }
+    }
+
+    public boolean isDraft() {
+        return status == ArticleStatus.DRAFT;
     }
 
     public void updateHeaderImageUrl(String headerImageUrl) {

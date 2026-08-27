@@ -11,9 +11,9 @@ export function ArticleCreatePage() {
   return (
     <div className="space-y-6">
       <Button asChild variant="outline">
-        <Link to="/articles">
+        <Link to="/me/articles">
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Wróć do artykułów
+          Moje artykuły
         </Link>
       </Button>
 
@@ -28,13 +28,16 @@ export function ArticleCreatePage() {
               Nowy artykuł
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground md:text-base">
-              Materiał zostanie opublikowany od razu po zapisaniu.
+              Możesz zapisać prywatną wersję roboczą albo od razu opublikować gotowy materiał.
             </p>
           </div>
         </div>
       </section>
 
-      <CreateArticleForm onCreated={(article) => navigate(`/articles/${article.id}`)} />
+      <CreateArticleForm
+        onDraftSaved={(article) => navigate(`/me/articles/${article.id}/edit`)}
+        onPublished={(article) => navigate(`/articles/${article.id}`)}
+      />
     </div>
   )
 }

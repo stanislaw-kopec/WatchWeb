@@ -95,3 +95,65 @@ svg {
 #root {
   min-height: 100vh;
 }
+
+.article-rich-content {
+  overflow-wrap: anywhere;
+}
+
+.article-rich-content > * + * {
+  margin-top: 1rem;
+}
+
+.article-rich-content h2 {
+  margin-top: 2rem;
+  font-size: 1.75rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.article-rich-content h3 {
+  margin-top: 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.article-rich-content ul,
+.article-rich-content ol {
+  padding-left: 1.5rem;
+}
+
+.article-rich-content ul {
+  list-style: disc;
+}
+
+.article-rich-content ol {
+  list-style: decimal;
+}
+
+.article-rich-content blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+}
+
+.article-rich-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-rich-content img {
+  width: auto;
+  max-width: 100%;
+  max-height: 720px;
+  margin-inline: auto;
+  border-radius: var(--radius);
+  object-fit: contain;
+}
+
+.article-rich-content:empty::before {
+  color: var(--muted-foreground);
+  content: 'Zacznij pisać artykuł…';
+  pointer-events: none;
+}

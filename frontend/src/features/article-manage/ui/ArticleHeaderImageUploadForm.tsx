@@ -27,6 +27,8 @@ export function ArticleHeaderImageUploadForm({ article, onCancel, onUploaded }: 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['articles'] }),
         queryClient.invalidateQueries({ queryKey: ['article', article.id] }),
+        queryClient.invalidateQueries({ queryKey: ['my-article', article.id] }),
+        queryClient.invalidateQueries({ queryKey: ['my-articles'] }),
       ])
       onUploaded?.(updatedArticle)
     },
