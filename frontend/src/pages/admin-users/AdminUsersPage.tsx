@@ -27,6 +27,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Pagination } from '@/shared/ui/pagination'
 import { Select } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -63,14 +64,14 @@ export function AdminUsersPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <AdminStat
+          <MetricCard
             icon={UsersRound}
             label="Użytkownicy"
             value={formatNumber(usersQuery.data?.totalElements)}
           />
-          <AdminStat icon={UserRound} label="Na stronie" value={String(users.length)} />
-          <AdminStat icon={ShieldCheck} label="Moderatorzy" value={visibleStats.moderators} />
-          <AdminStat icon={UserCog} label="Admini" value={visibleStats.admins} />
+          <MetricCard icon={UserRound} label="Na stronie" value={String(users.length)} />
+          <MetricCard icon={ShieldCheck} label="Moderatorzy" value={visibleStats.moderators} />
+          <MetricCard icon={UserCog} label="Admini" value={visibleStats.admins} />
         </div>
       </section>
 
@@ -203,26 +204,6 @@ function UserFact({ icon: Icon, label, value }: UserFactProps) {
         <p>{label}</p>
       </div>
       <p className="mt-1 break-words font-medium text-foreground">{value}</p>
-    </div>
-  )
-}
-
-type AdminStatProps = {
-  icon: typeof UsersRound
-  label: string
-  value: string
-}
-
-function AdminStat({ icon: Icon, label, value }: AdminStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

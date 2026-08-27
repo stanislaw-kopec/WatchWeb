@@ -15,6 +15,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 const SEARCH_PAGE_SIZE = 4
@@ -82,10 +83,10 @@ export function SearchPage() {
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SearchStat icon={Watch} label="Zegarki" value={formatNumber(watchesQuery.data?.totalElements)} />
-        <SearchStat icon={MessageSquareText} label="Posty" value={formatNumber(postsQuery.data?.totalElements)} />
-        <SearchStat icon={Newspaper} label="Artykuły" value={formatNumber(articlesQuery.data?.totalElements)} />
-        <SearchStat icon={Hash} label="Hashtagi" value={formatNumber(hashtagsQuery.data?.totalElements)} />
+        <MetricCard icon={Watch} label="Zegarki" value={formatNumber(watchesQuery.data?.totalElements)} />
+        <MetricCard icon={MessageSquareText} label="Posty" value={formatNumber(postsQuery.data?.totalElements)} />
+        <MetricCard icon={Newspaper} label="Artykuły" value={formatNumber(articlesQuery.data?.totalElements)} />
+        <MetricCard icon={Hash} label="Hashtagi" value={formatNumber(hashtagsQuery.data?.totalElements)} />
       </section>
 
       <ResultSection
@@ -185,26 +186,6 @@ function SearchHero({ label, title, description }: SearchHeroProps) {
         </p>
       </div>
     </section>
-  )
-}
-
-type SearchStatProps = {
-  icon: typeof Watch
-  label: string
-  value: string
-}
-
-function SearchStat({ icon: Icon, label, value }: SearchStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
-    </div>
   )
 }
 

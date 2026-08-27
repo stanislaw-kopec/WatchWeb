@@ -14,6 +14,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function ArticleDetailsPage() {
@@ -80,9 +81,9 @@ export function ArticleDetailsPage() {
         </article>
 
         <aside className="space-y-4">
-          <ArticleStat icon={BookOpenText} label="Czas czytania" value={estimateReadingTime(article.content)} />
-          <ArticleStat icon={FileText} label="Liczba słów" value={String(countWords(article.content))} />
-          <ArticleStat icon={CalendarDays} label="Ostatnia aktualizacja" value={formatDateTime(article.updatedAt)} />
+          <MetricCard icon={BookOpenText} label="Czas czytania" value={estimateReadingTime(article.content)} valueClassName="text-xl" />
+          <MetricCard icon={FileText} label="Liczba słów" value={String(countWords(article.content))} valueClassName="text-xl" />
+          <MetricCard icon={CalendarDays} label="Ostatnia aktualizacja" value={formatDateTime(article.updatedAt)} valueClassName="text-xl" />
           <Card>
             <CardHeader>
               <CardTitle>Autor</CardTitle>
@@ -106,26 +107,6 @@ export function ArticleDetailsPage() {
           ) : null}
         </aside>
       </section>
-    </div>
-  )
-}
-
-type ArticleStatProps = {
-  icon: typeof BookOpenText
-  label: string
-  value: string
-}
-
-function ArticleStat({ icon: Icon, label, value }: ArticleStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

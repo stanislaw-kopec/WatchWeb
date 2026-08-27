@@ -86,13 +86,13 @@ export function HomePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Następne moduły</CardTitle>
+          <CardTitle>Najważniejsze ścieżki</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-            <p>Edycja, usuwanie i upload zdjęć do własnych postów.</p>
-            <p>Zgłoszenia nowych zegarków do katalogu.</p>
-            <p>Moderacja treści oraz kolejek zgłoszeń.</p>
+            <p>Pisz posty i artykuły jako szkice, a potem wracaj do nich z widoku „Moje”.</p>
+            <p>Zgłaszaj nowe zegarki do katalogu i śledź status swoich zgłoszeń.</p>
+            <p>Moderuj treści oraz kolejkę zegarków z jasnym powodem odrzucenia.</p>
           </div>
         </CardContent>
       </Card>

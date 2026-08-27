@@ -18,6 +18,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Pagination } from '@/shared/ui/pagination'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -84,14 +85,14 @@ export function WatchesPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <CatalogStat
+          <MetricCard
             icon={Watch}
             label="W katalogu"
             value={formatNumber(watchesQuery.data?.totalElements)}
           />
-          <CatalogStat icon={Star} label="Średnia strony" value={visibleStats.averageRating} />
-          <CatalogStat icon={Waves} label="Marek na stronie" value={visibleStats.brands} />
-          <CatalogStat label="Zakres wyników" value={resultRange} />
+          <MetricCard icon={Star} label="Średnia strony" value={visibleStats.averageRating} />
+          <MetricCard icon={Waves} label="Marek na stronie" value={visibleStats.brands} />
+          <MetricCard label="Zakres wyników" value={resultRange} />
         </div>
       </section>
 
@@ -159,26 +160,6 @@ export function WatchesPage() {
           totalPages={watchesQuery.data?.totalPages ?? 0}
         />
       </section>
-    </div>
-  )
-}
-
-type CatalogStatProps = {
-  label: string
-  value: string
-  icon?: typeof Watch
-}
-
-function CatalogStat({ label, value, icon: Icon }: CatalogStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          {Icon ? <Icon className="size-4 text-primary" aria-hidden="true" /> : null}
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

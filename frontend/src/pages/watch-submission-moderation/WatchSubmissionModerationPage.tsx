@@ -3,7 +3,6 @@ import {
   Clock,
   FileText,
   RefreshCw,
-  Watch,
   XCircle,
 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -30,6 +29,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Pagination } from '@/shared/ui/pagination'
 import { Select } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -71,14 +71,14 @@ export function WatchSubmissionModerationPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ModerationStat
+          <MetricCard
             icon={FileText}
             label="Wyniki"
             value={formatNumber(moderationQuery.data?.totalElements)}
           />
-          <ModerationStat icon={Clock} label="Oczekujące" value={visibleStats.pending} />
-          <ModerationStat icon={CheckCircle2} label="Zatwierdzone" value={visibleStats.approved} />
-          <ModerationStat icon={XCircle} label="Odrzucone" value={visibleStats.rejected} />
+          <MetricCard icon={Clock} label="Oczekujące" value={visibleStats.pending} />
+          <MetricCard icon={CheckCircle2} label="Zatwierdzone" value={visibleStats.approved} />
+          <MetricCard icon={XCircle} label="Odrzucone" value={visibleStats.rejected} />
         </div>
       </section>
 
@@ -167,26 +167,6 @@ export function WatchSubmissionModerationPage() {
           totalPages={moderationQuery.data?.totalPages ?? 0}
         />
       </section>
-    </div>
-  )
-}
-
-type ModerationStatProps = {
-  icon: typeof Watch
-  label: string
-  value: string
-}
-
-function ModerationStat({ icon: Icon, label, value }: ModerationStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

@@ -21,6 +21,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { RichContent } from '@/shared/ui/rich-content'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -91,10 +92,10 @@ export function PostDetailsPage() {
         </article>
 
         <aside className="space-y-4">
-          <PostStat icon={UserRound} label="Autor" value={post.authorUsername} />
-          <PostStat icon={CalendarDays} label="Dodano" value={formatDateTime(post.createdAt)} />
-          <PostStat icon={FileText} label="Liczba słów" value={String(countWords(post.content))} />
-          <PostStat icon={MessageCircle} label="Komentarze" value={String(commentsCount)} />
+          <MetricCard icon={UserRound} label="Autor" value={post.authorUsername} valueClassName="text-xl" />
+          <MetricCard icon={CalendarDays} label="Dodano" value={formatDateTime(post.createdAt)} valueClassName="text-xl" />
+          <MetricCard icon={FileText} label="Liczba słów" value={String(countWords(post.content))} valueClassName="text-xl" />
+          <MetricCard icon={MessageCircle} label="Komentarze" value={String(commentsCount)} valueClassName="text-xl" />
           <Card>
             <CardHeader>
               <CardTitle>Hashtagi</CardTitle>
@@ -126,26 +127,6 @@ export function PostDetailsPage() {
         ) : null}
         {commentsQuery.isSuccess ? <PostCommentSection comments={comments} postId={post.id} /> : null}
       </section>
-    </div>
-  )
-}
-
-type PostStatProps = {
-  icon: typeof UserRound
-  label: string
-  value: string
-}
-
-function PostStat({ icon: Icon, label, value }: PostStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import { ArrowLeft, CalendarDays, ShieldCheck, UserRound } from 'lucide-react'
-import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 
 import { useUser } from '@/entities/user/api/useCurrentUser'
@@ -10,6 +9,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function UserProfilePage() {
@@ -59,13 +59,24 @@ export function UserProfilePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ProfileStat icon={ShieldCheck} label="Rola" value={<UserRoleBadge role={user.role} />} />
-          <ProfileStat icon={CalendarDays} label="Konto od" value={formatShortDate(user.createdAt)} />
-          <ProfileStat
+          <MetricCard
+            icon={ShieldCheck}
+            label="Rola"
+            value={<UserRoleBadge role={user.role} />}
+            valueClassName="text-xl"
+          />
+          <MetricCard
+            icon={CalendarDays}
+            label="Konto od"
+            value={formatShortDate(user.createdAt)}
+            valueClassName="text-xl"
+          />
+          <MetricCard
+            className="col-span-2"
             icon={UserRound}
             label="Status"
             value={user.anonymized ? 'Zanonimizowane' : 'Aktywne'}
-            wide
+            valueClassName="text-xl"
           />
         </div>
       </section>
@@ -86,27 +97,6 @@ export function UserProfilePage() {
           </dl>
         </CardContent>
       </Card>
-    </div>
-  )
-}
-
-type ProfileStatProps = {
-  icon: typeof ShieldCheck
-  label: string
-  value: string | ReactNode
-  wide?: boolean
-}
-
-function ProfileStat({ icon: Icon, label, value, wide }: ProfileStatProps) {
-  return (
-    <div className={wide ? 'col-span-2 rounded-lg border border-border bg-card p-4 shadow-sm' : 'rounded-lg border border-border bg-card p-4 shadow-sm'}>
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <div className="text-xl font-semibold tracking-normal text-foreground">{value}</div>
-      </div>
     </div>
   )
 }

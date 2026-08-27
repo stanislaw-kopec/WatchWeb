@@ -1,6 +1,7 @@
 import {
   Compass,
   FilePenLine,
+  ListChecks,
   LogIn,
   LogOut,
   MessageSquareText,
@@ -27,12 +28,14 @@ type NavigationItem = {
   href: string
   icon: typeof Compass
   allowedRoles?: UserRole[]
+  requiresAuth?: boolean
 }
 
 const navigation: NavigationItem[] = [
   { label: 'Start', href: '/', icon: Compass },
   { label: 'Katalog', href: '/watches', icon: Watch },
   { label: 'Posty', href: '/posts', icon: MessageSquareText },
+  { label: 'Moje posty', href: '/me/posts', icon: ListChecks, requiresAuth: true },
   { label: 'Artykuły', href: '/articles', icon: Newspaper },
   { label: 'Moje artykuły', href: '/me/articles', icon: FilePenLine, allowedRoles: ['ROLE_JOURNALIST', 'ROLE_ADMIN'] },
   { label: 'Moderacja', href: '/moderation', icon: ShieldCheck, allowedRoles: ['ROLE_MODERATOR', 'ROLE_ADMIN'] },
@@ -142,7 +145,11 @@ export function AppShell() {
 }
 
 function canSeeNavigationItem(item: NavigationItem, role: UserRole | undefined) {
-  return !item.allowedRoles || (role ? item.allowedRoles.includes(role) : false)
+  if (item.allowedRoles) {
+    return role ? item.allowedRoles.includes(role) : false
+  }
+
+  return !item.requiresAuth || Boolean(role)
 }
 
 function HeaderSearchForm() {

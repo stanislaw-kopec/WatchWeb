@@ -14,6 +14,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function WatchDetailsPage() {
@@ -67,10 +68,10 @@ export function WatchDetailsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <DetailStat icon={Star} label="Ocena" value={Number(watch.averageRating).toFixed(1)} />
-          <DetailStat icon={MessageCircle} label="Recenzje" value={String(watch.reviewsCount)} />
-          <DetailStat icon={Watch} label="Komentarze" value={String(commentsCount)} />
-          <DetailStat icon={Waves} label="WR" value={formatWaterResistance(watch.details)} />
+          <MetricCard icon={Star} label="Ocena" value={Number(watch.averageRating).toFixed(1)} />
+          <MetricCard icon={MessageCircle} label="Recenzje" value={String(watch.reviewsCount)} />
+          <MetricCard icon={Watch} label="Komentarze" value={String(commentsCount)} />
+          <MetricCard icon={Waves} label="WR" value={formatWaterResistance(watch.details)} />
         </div>
       </section>
 
@@ -118,26 +119,6 @@ export function WatchDetailsPage() {
           {commentsQuery.isSuccess ? <WatchCommentSection comments={comments} watchId={watch.id} /> : null}
         </section>
       </section>
-    </div>
-  )
-}
-
-type DetailStatProps = {
-  icon: typeof Star
-  label: string
-  value: string
-}
-
-function DetailStat({ icon: Icon, label, value }: DetailStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

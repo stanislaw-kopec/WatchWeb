@@ -16,6 +16,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Pagination } from '@/shared/ui/pagination'
 import { Select } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -57,9 +58,9 @@ export function MyReviewsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ReviewStat icon={FileText} label="Wszystkie" value={formatNumber(reviewsQuery.data?.totalElements)} />
-          <ReviewStat icon={Star} label="Na stronie" value={String(reviews.length)} />
-          <ReviewStat icon={Star} label="Średnia ocen" value={visibleStats.averageRating} wide />
+          <MetricCard icon={FileText} label="Wszystkie" value={formatNumber(reviewsQuery.data?.totalElements)} />
+          <MetricCard icon={Star} label="Na stronie" value={String(reviews.length)} />
+          <MetricCard className="col-span-2" icon={Star} label="Średnia ocen" value={visibleStats.averageRating} />
         </div>
       </section>
 
@@ -135,27 +136,6 @@ export function MyReviewsPage() {
           totalPages={reviewsQuery.data?.totalPages ?? 0}
         />
       </section>
-    </div>
-  )
-}
-
-type ReviewStatProps = {
-  icon: typeof FileText
-  label: string
-  value: string
-  wide?: boolean
-}
-
-function ReviewStat({ icon: Icon, label, value, wide }: ReviewStatProps) {
-  return (
-    <div className={wide ? 'col-span-2 rounded-lg border border-border bg-card p-4 shadow-sm' : 'rounded-lg border border-border bg-card p-4 shadow-sm'}>
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

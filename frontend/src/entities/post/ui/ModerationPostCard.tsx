@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
+import { postContentToText } from '@/entities/post/model/postContent'
 import type { Post } from '@/entities/post/model/types'
 import { PostStatusBadge } from '@/entities/post/ui/PostStatusBadge'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
@@ -16,6 +17,8 @@ type ModerationPostCardProps = {
 }
 
 export function ModerationPostCard({ post, actions }: ModerationPostCardProps) {
+  const plainContent = postContentToText(post.content)
+
   return (
     <Card className="overflow-hidden">
       <div className="grid gap-0 xl:grid-cols-[260px_1fr]">
@@ -41,7 +44,7 @@ export function ModerationPostCard({ post, actions }: ModerationPostCardProps) {
               {post.title}
             </h2>
             <div className="mt-3 max-h-56 overflow-y-auto rounded-md border border-border bg-secondary/35 p-3 text-sm leading-6 text-muted-foreground">
-              {getParagraphs(post.content).map((paragraph, index) => (
+              {getParagraphs(plainContent).map((paragraph, index) => (
                 <p className={index > 0 ? 'mt-3' : undefined} key={index}>
                   {paragraph}
                 </p>
@@ -60,7 +63,7 @@ export function ModerationPostCard({ post, actions }: ModerationPostCardProps) {
           ) : null}
 
           <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">{formatPostLength(post.content)}</p>
+            <p className="text-sm text-muted-foreground">{formatPostLength(plainContent)}</p>
             {post.status === 'APPROVED' ? (
               <Button asChild variant="outline">
                 <Link to={`/posts/${post.id}`}>
@@ -83,7 +86,7 @@ function PostVisual({ post }: { post: Post }) {
     return (
       <img
         alt=""
-        className="h-56 w-full object-cover xl:h-full"
+        className="h-56 w-full bg-secondary/45 object-contain xl:h-full"
         src={post.imageUrl}
       />
     )

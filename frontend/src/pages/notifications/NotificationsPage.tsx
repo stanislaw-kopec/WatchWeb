@@ -19,6 +19,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Pagination } from '@/shared/ui/pagination'
 import { Select } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -58,14 +59,14 @@ export function NotificationsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <NotificationStat
+          <MetricCard
             icon={Bell}
             label="Wszystkie"
             value={formatNumber(notificationsQuery.data?.totalElements)}
           />
-          <NotificationStat icon={Clock} label="Nowe na stronie" value={visibleStats.unread} />
-          <NotificationStat icon={CheckCircle2} label="Przeczytane" value={visibleStats.read} />
-          <NotificationStat icon={Bell} label="Na stronie" value={String(notifications.length)} />
+          <MetricCard icon={Clock} label="Nowe na stronie" value={visibleStats.unread} />
+          <MetricCard icon={CheckCircle2} label="Przeczytane" value={visibleStats.read} />
+          <MetricCard icon={Bell} label="Na stronie" value={String(notifications.length)} />
         </div>
       </section>
 
@@ -150,26 +151,6 @@ export function NotificationsPage() {
           totalPages={notificationsQuery.data?.totalPages ?? 0}
         />
       </section>
-    </div>
-  )
-}
-
-type NotificationStatProps = {
-  icon: typeof Bell
-  label: string
-  value: string
-}
-
-function NotificationStat({ icon: Icon, label, value }: NotificationStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

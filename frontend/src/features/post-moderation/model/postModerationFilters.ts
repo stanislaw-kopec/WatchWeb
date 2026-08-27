@@ -1,7 +1,9 @@
 import type { PostModerationListParams } from '@/entities/post/api/postApi'
 import type { PostStatus } from '@/entities/post/model/types'
 
-export type PostModerationStatusFilter = 'ALL' | PostStatus
+type ModeratablePostStatus = Exclude<PostStatus, 'DRAFT'>
+
+export type PostModerationStatusFilter = 'ALL' | ModeratablePostStatus
 
 export type PostModerationSearchState = {
   status: PostModerationStatusFilter

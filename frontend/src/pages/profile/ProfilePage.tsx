@@ -25,6 +25,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function ProfilePage() {
@@ -72,9 +73,25 @@ export function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ProfileStat icon={ShieldCheck} label="Rola" value={user ? USER_ROLE_LABELS[user.role] : '-'} />
-          <ProfileStat icon={CalendarDays} label="Konto od" value={user ? formatShortDate(user.createdAt) : '-'} />
-          <ProfileStat icon={Mail} label="Email" value={user?.email ?? '-'} wide />
+          <MetricCard
+            icon={ShieldCheck}
+            label="Rola"
+            value={user ? USER_ROLE_LABELS[user.role] : '-'}
+            valueClassName="break-words text-xl"
+          />
+          <MetricCard
+            icon={CalendarDays}
+            label="Konto od"
+            value={user ? formatShortDate(user.createdAt) : '-'}
+            valueClassName="break-words text-xl"
+          />
+          <MetricCard
+            className="col-span-2"
+            icon={Mail}
+            label="Email"
+            value={user?.email ?? '-'}
+            valueClassName="break-words text-xl"
+          />
         </div>
       </section>
 
@@ -188,27 +205,6 @@ export function ProfilePage() {
           </Card>
         </aside>
       </section>
-    </div>
-  )
-}
-
-type ProfileStatProps = {
-  icon: typeof ShieldCheck
-  label: string
-  value: string
-  wide?: boolean
-}
-
-function ProfileStat({ icon: Icon, label, value, wide }: ProfileStatProps) {
-  return (
-    <div className={wide ? 'col-span-2 rounded-lg border border-border bg-card p-4 shadow-sm' : 'rounded-lg border border-border bg-card p-4 shadow-sm'}>
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="break-words text-xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }

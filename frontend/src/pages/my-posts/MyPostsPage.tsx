@@ -17,6 +17,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { ErrorState } from '@/shared/ui/error-state'
+import { MetricCard } from '@/shared/ui/metric-card'
 import { Pagination } from '@/shared/ui/pagination'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -64,8 +65,8 @@ export function MyPostsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <MyPostStat icon={FileText} label="Wyniki" value={formatNumber(postsQuery.data?.totalElements)} />
-          <MyPostStat icon={FileText} label="Na stronie" value={String(posts.length)} />
+          <MetricCard icon={FileText} label="Wyniki" value={formatNumber(postsQuery.data?.totalElements)} />
+          <MetricCard icon={FileText} label="Na stronie" value={String(posts.length)} />
         </div>
       </section>
 
@@ -134,26 +135,6 @@ export function MyPostsPage() {
           totalPages={postsQuery.data?.totalPages ?? 0}
         />
       </section>
-    </div>
-  )
-}
-
-type MyPostStatProps = {
-  icon: typeof FileText
-  label: string
-  value: string
-}
-
-function MyPostStat({ icon: Icon, label, value }: MyPostStatProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex min-h-20 flex-col justify-between gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <Icon className="size-4 text-primary" aria-hidden="true" />
-        </div>
-        <p className="text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-      </div>
     </div>
   )
 }
