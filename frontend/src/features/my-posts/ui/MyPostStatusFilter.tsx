@@ -10,6 +10,7 @@ type MyPostStatusFilterProps = {
 
 const OPTIONS: Array<{ value: MyPostStatusFilterValue; label: string }> = [
   { value: 'ALL', label: 'Wszystkie' },
+  { value: 'DRAFT', label: POST_STATUS_LABELS.DRAFT },
   { value: 'PENDING', label: POST_STATUS_LABELS.PENDING },
   { value: 'APPROVED', label: POST_STATUS_LABELS.APPROVED },
   { value: 'REJECTED', label: POST_STATUS_LABELS.REJECTED },

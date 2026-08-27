@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +20,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @EntityGraph(attributePaths = "author")
     Page<Post> findByStatusAndDeletedAtIsNull(PostStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = "author")
+    Page<Post> findByStatusInAndDeletedAtIsNull(Collection<PostStatus> statuses, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
     @Query(

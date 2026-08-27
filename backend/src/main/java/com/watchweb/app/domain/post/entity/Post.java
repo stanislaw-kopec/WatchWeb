@@ -75,10 +75,14 @@ public class Post {
     }
 
     public Post(User author, String title, String content) {
+        this(author, title, content, PostStatus.PENDING);
+    }
+
+    public Post(User author, String title, String content, PostStatus status) {
         this.author = author;
         this.title = title;
         this.content = content;
-        this.status = PostStatus.PENDING;
+        this.status = status;
     }
 
     @PrePersist
@@ -154,6 +158,20 @@ public class Post {
         rejectionReason = null;
     }
 
+    public void updateDraft(String title, String content) {
+        this.title = title;
+        this.content = content;
+        status = PostStatus.DRAFT;
+        rejectionReason = null;
+    }
+
+    public void submitForModeration(String title, String content) {
+        this.title = title;
+        this.content = content;
+        status = PostStatus.PENDING;
+        rejectionReason = null;
+    }
+
     public void replaceHashtags(Set<Hashtag> hashtags) {
         this.hashtags.clear();
         this.hashtags.addAll(hashtags);
@@ -161,7 +179,9 @@ public class Post {
 
     public void updateImageByAuthor(String imageUrl) {
         this.imageUrl = imageUrl;
-        status = PostStatus.PENDING;
+        if (status != PostStatus.DRAFT) {
+            status = PostStatus.PENDING;
+        }
         rejectionReason = null;
     }
 
@@ -171,6 +191,10 @@ public class Post {
 
     public boolean isPending() {
         return status == PostStatus.PENDING;
+    }
+
+    public boolean isDraft() {
+        return status == PostStatus.DRAFT;
     }
 
     public boolean isDeleted() {

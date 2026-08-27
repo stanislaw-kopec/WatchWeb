@@ -7,6 +7,7 @@ type PostStatusBadgeProps = {
 }
 
 const STATUS_CLASS_NAMES: Record<PostStatus, string> = {
+  DRAFT: 'border border-input bg-card text-muted-foreground',
   PENDING: 'border border-accent/50 bg-accent/15 text-accent-foreground',
   APPROVED: 'border border-primary/30 bg-secondary text-secondary-foreground',
   REJECTED: 'border border-destructive/40 bg-destructive/10 text-destructive',

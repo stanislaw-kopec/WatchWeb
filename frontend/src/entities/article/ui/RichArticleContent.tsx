@@ -9,7 +9,7 @@ type RichArticleContentProps = {
 export function RichArticleContent({ content, className }: RichArticleContentProps) {
   return (
     <div
-      className={cn('article-rich-content', className)}
+      className={cn('rich-content', className)}
       dangerouslySetInnerHTML={{ __html: normalizeArticleContentForEditor(content) }}
     />
   )

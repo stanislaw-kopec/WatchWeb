@@ -62,7 +62,8 @@ export function PostImageUploadForm({ post, onCancel, onUploaded }: PostImageUpl
         <div>
           <p className="font-medium text-foreground">Zdjęcie posta</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Akceptowane formaty: JPG, PNG i WEBP do 5 MB. Zmiana zdjęcia wraca do moderacji.
+            Akceptowane formaty: JPG, PNG i WEBP do 5 MB.
+            {post.status === 'DRAFT' ? ' Szkic pozostanie prywatny.' : ' Zmiana zdjęcia wraca do moderacji.'}
           </p>
         </div>
       </div>

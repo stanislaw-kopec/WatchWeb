@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { FilePenLine, Save, Send, X } from 'lucide-react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 
-import { publishArticle, updateArticle, updateArticleDraft } from '@/entities/article/api/articleApi'
+import { publishArticle, updateArticle, updateArticleDraft, uploadArticleContentImage } from '@/entities/article/api/articleApi'
 import type { Article } from '@/entities/article/model/types'
 import {
   ARTICLE_CONTENT_MAX_LENGTH,
@@ -116,10 +116,13 @@ export function EditArticleForm({ article, onCancel, onUpdated, onPublished }: E
             name="content"
             render={({ field, fieldState }) => (
               <RichTextEditor
+                ariaLabel="Treść artykułu"
                 disabled={isPending}
                 invalid={fieldState.invalid}
                 onBlur={field.onBlur}
                 onChange={field.onChange}
+                placeholder="Zacznij pisać artykuł..."
+                uploadImage={uploadArticleContentImage}
                 value={field.value}
               />
             )}

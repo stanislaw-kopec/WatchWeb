@@ -96,14 +96,17 @@ svg {
   min-height: 100vh;
 }
 
+.rich-content,
 .article-rich-content {
   overflow-wrap: anywhere;
 }
 
+.rich-content > * + *,
 .article-rich-content > * + * {
   margin-top: 1rem;
 }
 
+.rich-content h2,
 .article-rich-content h2 {
   margin-top: 2rem;
   font-size: 1.75rem;
@@ -111,6 +114,7 @@ svg {
   line-height: 1.25;
 }
 
+.rich-content h3,
 .article-rich-content h3 {
   margin-top: 1.5rem;
   font-size: 1.3rem;
@@ -118,31 +122,38 @@ svg {
   line-height: 1.35;
 }
 
+.rich-content ul,
+.rich-content ol,
 .article-rich-content ul,
 .article-rich-content ol {
   padding-left: 1.5rem;
 }
 
+.rich-content ul,
 .article-rich-content ul {
   list-style: disc;
 }
 
+.rich-content ol,
 .article-rich-content ol {
   list-style: decimal;
 }
 
+.rich-content blockquote,
 .article-rich-content blockquote {
   border-left: 3px solid var(--primary);
   padding-left: 1rem;
   color: var(--muted-foreground);
 }
 
+.rich-content a,
 .article-rich-content a {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
+.rich-content img,
 .article-rich-content img {
   width: auto;
   max-width: 100%;
@@ -150,6 +161,12 @@ svg {
   margin-inline: auto;
   border-radius: var(--radius);
   object-fit: contain;
+}
+
+.rich-content:empty::before {
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  pointer-events: none;
 }
 
 .article-rich-content:empty::before {

@@ -59,7 +59,7 @@ export function MyPostsPage() {
             Statusy wpisów
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-            Tu widzisz swoje posty przed publikacją, po akceptacji oraz po odrzuceniu z powodem.
+            Tu widzisz szkice, posty oczekujące na moderację, opublikowane wpisy oraz odrzucone posty z powodem.
           </p>
         </div>
 

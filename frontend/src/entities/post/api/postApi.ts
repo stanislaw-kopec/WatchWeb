@@ -32,6 +32,12 @@ export type CreatePostRequest = {
 
 export type UpdatePostRequest = CreatePostRequest
 
+export type SavePostDraftRequest = CreatePostRequest
+
+export type PostImageResponse = {
+  url: string
+}
+
 export type RejectPostRequest = {
   reason: string
 }
@@ -42,6 +48,10 @@ export function getPosts(params: PostListParams = {}) {
 
 export function getMyPosts(params: MyPostListParams = {}) {
   return getPostPage('/api/posts/me', params)
+}
+
+export function getMyPost(postId: string) {
+  return httpClient<Post>(`/api/posts/me/${postId}`)
 }
 
 export function getPostModerationQueue(params: PostModerationListParams = {}) {
@@ -59,9 +69,30 @@ export function createPost(request: CreatePostRequest) {
   })
 }
 
+export function createPostDraft(request: SavePostDraftRequest) {
+  return httpClient<Post>('/api/posts/drafts', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
 export function updatePost(postId: string, request: UpdatePostRequest) {
   return httpClient<Post>(`/api/posts/${postId}`, {
     method: 'PUT',
+    body: JSON.stringify(request),
+  })
+}
+
+export function updatePostDraft(postId: string, request: SavePostDraftRequest) {
+  return httpClient<Post>(`/api/posts/${postId}/draft`, {
+    method: 'PUT',
+    body: JSON.stringify(request),
+  })
+}
+
+export function submitPostDraft(postId: string, request: CreatePostRequest) {
+  return httpClient<Post>(`/api/posts/${postId}/submit`, {
+    method: 'POST',
     body: JSON.stringify(request),
   })
 }
@@ -72,6 +103,16 @@ export function updatePostImage(postId: string, file: File) {
 
   return httpClient<Post>(`/api/posts/${postId}/image`, {
     method: 'PUT',
+    body: formData,
+  })
+}
+
+export function uploadPostContentImage(file: File) {
+  const formData = new FormData()
+  formData.set('file', file)
+
+  return httpClient<PostImageResponse>('/api/posts/content-images', {
+    method: 'POST',
     body: formData,
   })
 }

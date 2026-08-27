@@ -37,8 +37,8 @@ export function PostCreatePage() {
               Dodaj post
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-              Nowy wpis zostanie zapisany ze statusem oczekującym i pojawi się publicznie po
-              akceptacji moderatora.
+              Możesz zapisać szkic prywatnie albo wysłać wpis do moderacji. Publicznie pojawi się
+              dopiero po akceptacji moderatora.
             </p>
           </div>
 
@@ -53,7 +53,7 @@ export function PostCreatePage() {
                   <CheckCircle2 className="size-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <CardTitle>Post zapisany</CardTitle>
+                  <CardTitle>{createdPost.status === 'DRAFT' ? 'Szkic zapisany' : 'Post zapisany'}</CardTitle>
                   <div className="mt-2">
                     <PostStatusBadge status={createdPost.status} />
                   </div>
@@ -63,7 +63,9 @@ export function PostCreatePage() {
                 <div>
                   <p className="font-medium text-foreground">{createdPost.title}</p>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Status wpisu możesz śledzić w swoim panelu postów.
+                    {createdPost.status === 'DRAFT'
+                      ? 'Szkic znajdziesz w swoim panelu postów.'
+                      : 'Status wpisu możesz śledzić w swoim panelu postów.'}
                   </p>
                 </div>
                 <Button asChild className="w-full">

@@ -2,6 +2,7 @@ import { ArrowRight, CalendarDays, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
+import { postContentToText } from '@/entities/post/model/postContent'
 import type { Post } from '@/entities/post/model/types'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { formatDateTime } from '@/shared/lib/date'
@@ -41,7 +42,7 @@ export function PostCard({ post }: PostCardProps) {
               </Link>
             </h3>
             <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-              {post.content}
+              {postContentToText(post.content)}
             </p>
           </div>
 
@@ -50,7 +51,7 @@ export function PostCard({ post }: PostCardProps) {
           ) : null}
 
           <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">{formatPostLength(post.content)}</p>
+            <p className="text-sm text-muted-foreground">{formatPostLength(postContentToText(post.content))}</p>
             <Button asChild variant="outline">
               <Link to={`/posts/${post.id}`}>
                 Szczegóły
@@ -69,7 +70,7 @@ function PostVisual({ post }: { post: Post }) {
     return (
       <img
         alt=""
-        className="h-56 w-full object-cover lg:h-full"
+        className="h-56 w-full bg-secondary/45 object-contain lg:h-full"
         src={post.imageUrl}
       />
     )

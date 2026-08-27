@@ -12,6 +12,7 @@ import { usePostComments } from '@/entities/comment/api/usePostComments'
 import type { PostComment } from '@/entities/comment/model/types'
 import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
 import { usePost } from '@/entities/post/api/usePosts'
+import { postContentToText } from '@/entities/post/model/postContent'
 import type { Post } from '@/entities/post/model/types'
 import { UserProfileLink } from '@/entities/user/ui/UserProfileLink'
 import { PostCommentSection } from '@/features/comment-create/ui/PostCommentSection'
@@ -20,6 +21,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ErrorState } from '@/shared/ui/error-state'
+import { RichContent } from '@/shared/ui/rich-content'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function PostDetailsPage() {
@@ -85,11 +87,7 @@ export function PostDetailsPage() {
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <article className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
-          <div className="space-y-5 text-base leading-8 text-foreground">
-            {getParagraphs(post.content).map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
+          <RichContent className="text-base leading-8 text-foreground" content={post.content} />
         </article>
 
         <aside className="space-y-4">
@@ -157,7 +155,7 @@ function PostHeroVisual({ post }: { post: Post }) {
     return (
       <img
         alt=""
-        className="min-h-72 w-full object-cover xl:h-full"
+        className="min-h-72 w-full bg-secondary/45 object-contain xl:h-full"
         src={post.imageUrl}
       />
     )
@@ -202,7 +200,7 @@ function PostDetailsSkeleton() {
 }
 
 function getParagraphs(content: string) {
-  return content
+  return postContentToText(content)
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
@@ -215,7 +213,7 @@ function getLead(content: string) {
 }
 
 function countWords(content: string) {
-  return content.trim().split(/\s+/).filter(Boolean).length
+  return postContentToText(content).split(/\s+/).filter(Boolean).length
 }
 
 function countComments(comments: Array<{ children: PostComment[] }>): number {

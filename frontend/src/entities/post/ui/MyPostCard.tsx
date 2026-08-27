@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, MessageSquareText } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { HashtagLinkList } from '@/entities/hashtag/ui/HashtagLinkList'
+import { postContentToText } from '@/entities/post/model/postContent'
 import { POST_STATUS_DESCRIPTIONS } from '@/entities/post/model/postStatus'
 import type { Post } from '@/entities/post/model/types'
 import { PostStatusBadge } from '@/entities/post/ui/PostStatusBadge'
@@ -37,11 +38,11 @@ export function MyPostCard({ post, actions }: MyPostCardProps) {
                   {post.title}
                 </Link>
               ) : (
-                post.title
+                post.title || 'Post bez tytułu'
               )}
             </h3>
             <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-              {post.content}
+              {postContentToText(post.content) || 'Szkic nie ma jeszcze treści.'}
             </p>
           </div>
 
@@ -79,7 +80,7 @@ function PostVisual({ post }: { post: Post }) {
     return (
       <img
         alt=""
-        className="h-48 w-full object-cover lg:h-full"
+        className="h-48 w-full bg-secondary/45 object-contain lg:h-full"
         src={post.imageUrl}
       />
     )

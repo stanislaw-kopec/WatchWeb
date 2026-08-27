@@ -1,14 +1,14 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Save, X } from 'lucide-react'
+import { FilePenLine, Save, Send, X } from 'lucide-react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 
 import { HashtagAutocompleteInput } from '@/entities/hashtag/ui/HashtagAutocompleteInput'
-import { updatePost } from '@/entities/post/api/postApi'
+import { submitPostDraft, updatePost, updatePostDraft, uploadPostContentImage } from '@/entities/post/api/postApi'
 import {
   formatPostHashtagsInput,
   POST_CONTENT_MAX_LENGTH,
   POST_TITLE_MAX_LENGTH,
+  postDraftFormSchema,
   postFormSchema,
 } from '@/entities/post/model/postForm'
 import type { PostFormValues } from '@/entities/post/model/postForm'
@@ -18,7 +18,8 @@ import { FormFieldError } from '@/features/auth/ui/FormFieldError'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { Textarea } from '@/shared/ui/textarea'
+import { RichTextEditor } from '@/shared/ui/rich-text-editor'
+import { UnsavedChangesGuard } from '@/shared/ui/unsaved-changes-guard'
 
 type EditPostFormProps = {
   post: Post
@@ -29,7 +30,6 @@ type EditPostFormProps = {
 export function EditPostForm({ post, onCancel, onUpdated }: EditPostFormProps) {
   const queryClient = useQueryClient()
   const form = useForm<PostFormValues>({
-    resolver: zodResolver(postFormSchema),
     defaultValues: {
       title: post.title,
       content: post.content,
@@ -41,103 +41,191 @@ export function EditPostForm({ post, onCancel, onUpdated }: EditPostFormProps) {
   const hashtagsValue = useWatch({ control: form.control, name: 'hashtags' }) ?? ''
   const parsedHashtags = parsePostHashtags(hashtagsValue)
 
-  const updatePostMutation = useMutation({
-    mutationFn: (values: PostFormValues) =>
-      updatePost(post.id, {
-        title: values.title.trim(),
-        content: values.content.trim(),
-        hashtags: parsePostHashtags(values.hashtags),
-      }),
-    onSuccess: async (updatedPost) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['posts'] }),
-        queryClient.invalidateQueries({ queryKey: ['post', post.id] }),
-        queryClient.invalidateQueries({ queryKey: ['my-posts'] }),
-      ])
-      onUpdated?.(updatedPost)
-    },
-  })
+  const updatePostMutation = useMutation({ mutationFn: (values: PostFormValues) => updatePost(post.id, toRequest(values)) })
+  const draftMutation = useMutation({ mutationFn: (values: PostFormValues) => updatePostDraft(post.id, toRequest(values)) })
+  const submitMutation = useMutation({ mutationFn: (values: PostFormValues) => submitPostDraft(post.id, toRequest(values)) })
+  const isPending = updatePostMutation.isPending || draftMutation.isPending || submitMutation.isPending
+  const mutationError = updatePostMutation.error ?? draftMutation.error ?? submitMutation.error
 
-  function handleSubmit(values: PostFormValues) {
-    updatePostMutation.mutate(values)
+  async function persistChanges(notifyParent: boolean) {
+    const values = form.getValues()
+    if (!validateValues(values, post.status !== 'DRAFT')) {
+      if (notifyParent) {
+        return
+      }
+      throw new Error('Popraw pola oznaczone w formularzu.')
+    }
+
+    const updatedPost = post.status === 'DRAFT'
+      ? await draftMutation.mutateAsync(values)
+      : await updatePostMutation.mutateAsync(values)
+    form.reset({
+      title: updatedPost.title,
+      content: updatedPost.content,
+      hashtags: formatPostHashtagsInput(updatedPost.hashtags),
+    })
+    await invalidatePostQueries(queryClient, post.id)
+    if (notifyParent) {
+      onUpdated?.(updatedPost)
+    }
+  }
+
+  async function handleSubmitForModeration() {
+    const values = form.getValues()
+    if (!validateValues(values, true)) {
+      return
+    }
+
+    const submittedPost = await submitMutation.mutateAsync(values)
+    form.reset({
+      title: submittedPost.title,
+      content: submittedPost.content,
+      hashtags: formatPostHashtagsInput(submittedPost.hashtags),
+    })
+    await invalidatePostQueries(queryClient, post.id)
+    window.setTimeout(() => onUpdated?.(submittedPost), 0)
+  }
+
+  function validateValues(values: PostFormValues, forSubmission: boolean) {
+    form.clearErrors()
+    const result = (forSubmission ? postFormSchema : postDraftFormSchema).safeParse(values)
+    if (result.success) {
+      return true
+    }
+
+    result.error.issues.forEach((issue) => {
+      const field = issue.path[0]
+      if (field === 'title' || field === 'content' || field === 'hashtags') {
+        form.setError(field, { message: issue.message })
+      }
+    })
+    return false
   }
 
   return (
-    <form className="space-y-4 rounded-md border border-border bg-secondary/35 p-4" onSubmit={form.handleSubmit(handleSubmit)}>
-      <div>
-        <p className="font-medium text-foreground">Edytuj post</p>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">
-          Po zapisaniu wpis wróci do moderacji.
-        </p>
-      </div>
-
-      <label className="grid gap-2">
-        <span className="text-sm font-medium text-foreground">Tytuł</span>
-        <Input maxLength={POST_TITLE_MAX_LENGTH} {...form.register('title')} />
-        <div className="flex items-center justify-between gap-3">
-          <FormFieldError message={form.formState.errors.title?.message} />
-          <p className="ml-auto text-xs text-muted-foreground">
-            {title.length}/{POST_TITLE_MAX_LENGTH}
+    <>
+      <form className="space-y-4 rounded-md border border-border bg-secondary/35 p-4" onSubmit={(event) => event.preventDefault()}>
+        <div>
+          <p className="font-medium text-foreground">Edytuj post</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {post.status === 'DRAFT'
+              ? 'Szkic pozostaje prywatny do chwili wysłania go do moderacji.'
+              : 'Po zapisaniu wpis wróci do moderacji.'}
           </p>
         </div>
-      </label>
 
-      <label className="grid gap-2">
-        <span className="text-sm font-medium text-foreground">Treść</span>
-        <Textarea className="min-h-48" maxLength={POST_CONTENT_MAX_LENGTH} {...form.register('content')} />
-        <div className="flex items-center justify-between gap-3">
-          <FormFieldError message={form.formState.errors.content?.message} />
-          <p className="ml-auto text-xs text-muted-foreground">
-            {content.length}/{POST_CONTENT_MAX_LENGTH}
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Tytuł</span>
+          <Input disabled={isPending} maxLength={POST_TITLE_MAX_LENGTH} {...form.register('title')} />
+          <div className="flex items-center justify-between gap-3">
+            <FormFieldError message={form.formState.errors.title?.message} />
+            <p className="ml-auto text-xs text-muted-foreground">
+              {title.length}/{POST_TITLE_MAX_LENGTH}
+            </p>
+          </div>
+        </label>
+
+        <div className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Treść</span>
+          <Controller
+            control={form.control}
+            name="content"
+            render={({ field, fieldState }) => (
+              <RichTextEditor
+                ariaLabel="Treść posta"
+                disabled={isPending}
+                invalid={fieldState.invalid}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                placeholder="Opisz obserwacje, pytanie albo historię związaną z zegarkiem."
+                uploadImage={uploadPostContentImage}
+                value={field.value}
+              />
+            )}
+          />
+          <div className="flex items-center justify-between gap-3">
+            <FormFieldError message={form.formState.errors.content?.message} />
+            <p className="ml-auto text-xs text-muted-foreground">
+              {content.length}/{POST_CONTENT_MAX_LENGTH}
+            </p>
+          </div>
+        </div>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Hashtagi</span>
+          <Controller
+            control={form.control}
+            name="hashtags"
+            render={({ field }) => (
+              <HashtagAutocompleteInput
+                disabled={isPending}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                value={field.value}
+              />
+            )}
+          />
+          <FormFieldError message={form.formState.errors.hashtags?.message} />
+        </label>
+
+        {parsedHashtags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {parsedHashtags.map((hashtag) => (
+              <Badge key={hashtag} variant="secondary">
+                {hashtag}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+
+        {mutationError ? (
+          <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            {getErrorMessage(mutationError)}
           </p>
+        ) : null}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button disabled={isPending} onClick={onCancel} type="button" variant="outline">
+            <X className="size-4" aria-hidden="true" />
+            Anuluj
+          </Button>
+          <Button disabled={isPending} onClick={() => void persistChanges(true).catch(() => undefined)} type="button" variant={post.status === 'DRAFT' ? 'outline' : 'default'}>
+            {post.status === 'DRAFT' ? <FilePenLine className="size-4" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
+            {updatePostMutation.isPending || draftMutation.isPending ? 'Zapisywanie...' : post.status === 'DRAFT' ? 'Zapisz szkic' : 'Zapisz zmiany'}
+          </Button>
+          {post.status === 'DRAFT' ? (
+            <Button disabled={isPending} onClick={() => void handleSubmitForModeration().catch(() => undefined)} type="button">
+              <Send className="size-4" aria-hidden="true" />
+              {submitMutation.isPending ? 'Wysyłanie...' : 'Wyślij do moderacji'}
+            </Button>
+          ) : null}
         </div>
-      </label>
-
-      <label className="grid gap-2">
-        <span className="text-sm font-medium text-foreground">Hashtagi</span>
-        <Controller
-          control={form.control}
-          name="hashtags"
-          render={({ field }) => (
-            <HashtagAutocompleteInput
-              disabled={updatePostMutation.isPending}
-              onBlur={field.onBlur}
-              onChange={field.onChange}
-              value={field.value}
-            />
-          )}
-        />
-        <FormFieldError message={form.formState.errors.hashtags?.message} />
-      </label>
-
-      {parsedHashtags.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {parsedHashtags.map((hashtag) => (
-            <Badge key={hashtag} variant="secondary">
-              {hashtag}
-            </Badge>
-          ))}
-        </div>
-      ) : null}
-
-      {updatePostMutation.isError ? (
-        <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          {getErrorMessage(updatePostMutation.error)}
-        </p>
-      ) : null}
-
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button disabled={updatePostMutation.isPending} onClick={onCancel} type="button" variant="outline">
-          <X className="size-4" aria-hidden="true" />
-          Anuluj
-        </Button>
-        <Button disabled={updatePostMutation.isPending} type="submit">
-          <Save className="size-4" aria-hidden="true" />
-          {updatePostMutation.isPending ? 'Zapisywanie' : 'Zapisz zmiany'}
-        </Button>
-      </div>
-    </form>
+      </form>
+      <UnsavedChangesGuard
+        itemName="Post"
+        onSave={() => persistChanges(false)}
+        saveLabel={post.status === 'DRAFT' ? 'Zapisz szkic' : 'Zapisz zmiany'}
+        when={form.formState.isDirty}
+      />
+    </>
   )
+}
+
+function toRequest(values: PostFormValues) {
+  return {
+    title: values.title.trim(),
+    content: values.content.trim(),
+    hashtags: parsePostHashtags(values.hashtags),
+  }
+}
+
+async function invalidatePostQueries(queryClient: ReturnType<typeof useQueryClient>, postId: string) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    queryClient.invalidateQueries({ queryKey: ['post', postId] }),
+    queryClient.invalidateQueries({ queryKey: ['my-post', postId] }),
+    queryClient.invalidateQueries({ queryKey: ['my-posts'] }),
+  ])
 }
 
 function getErrorMessage(error: unknown) {

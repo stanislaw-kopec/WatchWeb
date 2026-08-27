@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.UUID;
 
 @Service
@@ -20,6 +21,11 @@ public class PostModerationService {
 
     private final PostRepository postRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private static final EnumSet<PostStatus> MODERATION_VISIBLE_STATUSES = EnumSet.of(
+            PostStatus.PENDING,
+            PostStatus.APPROVED,
+            PostStatus.REJECTED
+    );
 
     public PostModerationService(PostRepository postRepository, ApplicationEventPublisher eventPublisher) {
         this.postRepository = postRepository;
@@ -28,8 +34,12 @@ public class PostModerationService {
 
     @Transactional(readOnly = true)
     public Page<PostResponse> list(PostStatus status, Pageable pageable) {
+        if (status == PostStatus.DRAFT) {
+            return Page.empty(pageable);
+        }
+
         var posts = status == null
-                ? postRepository.findByDeletedAtIsNull(pageable)
+                ? postRepository.findByStatusInAndDeletedAtIsNull(MODERATION_VISIBLE_STATUSES, pageable)
                 : postRepository.findByStatusAndDeletedAtIsNull(status, pageable);
 
         return posts.map(PostResponse::fromEntity);

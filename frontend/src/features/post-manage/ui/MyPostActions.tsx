@@ -34,8 +34,8 @@ export function MyPostActions({ post }: MyPostActionsProps) {
     return (
       <EditPostForm
         onCancel={() => setMode('idle')}
-        onUpdated={() => {
-          setNotice('Post został zapisany i wrócił do moderacji.')
+        onUpdated={(updatedPost) => {
+          setNotice(updatedPost.status === 'DRAFT' ? 'Szkic został zapisany.' : 'Post został zapisany i wrócił do moderacji.')
           setMode('idle')
         }}
         post={post}
@@ -47,8 +47,8 @@ export function MyPostActions({ post }: MyPostActionsProps) {
     return (
       <PostImageUploadForm
         onCancel={() => setMode('idle')}
-        onUploaded={() => {
-          setNotice('Zdjęcie zostało zapisane, a post wrócił do moderacji.')
+        onUploaded={(updatedPost) => {
+          setNotice(updatedPost.status === 'DRAFT' ? 'Zdjęcie zostało zapisane w szkicu.' : 'Zdjęcie zostało zapisane, a post wrócił do moderacji.')
           setMode('idle')
         }}
         post={post}

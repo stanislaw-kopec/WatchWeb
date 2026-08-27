@@ -13,7 +13,7 @@ export const DEFAULT_MY_POST_PAGE_SIZE = 8
 
 export const MY_POST_PAGE_SIZES = [8, 16, 24] as const
 
-const POST_STATUS_FILTER_VALUES: MyPostStatusFilter[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED']
+const POST_STATUS_FILTER_VALUES: MyPostStatusFilter[] = ['ALL', 'DRAFT', 'PENDING', 'APPROVED', 'REJECTED']
 
 export function parseMyPostListSearchParams(searchParams: URLSearchParams): MyPostListSearchState {
   const status = searchParams.get('status')
@@ -30,7 +30,7 @@ export function toMyPostListParams(state: MyPostListSearchState): MyPostListPara
     status: state.status === 'ALL' ? undefined : state.status,
     page: state.page,
     size: state.size,
-    sort: 'createdAt,desc',
+    sort: 'updatedAt,desc',
   }
 }
 

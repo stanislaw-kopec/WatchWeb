@@ -3,11 +3,15 @@ package com.watchweb.app.domain.post.service;
 import com.watchweb.app.domain.hashtag.service.HashtagService;
 import com.watchweb.app.domain.hashtag.service.HashtagNameNormalizer;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
+import com.watchweb.app.domain.post.dto.PostImageResponse;
 import com.watchweb.app.domain.post.dto.PostResponse;
+import com.watchweb.app.domain.post.dto.SavePostDraftRequest;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.entity.Post;
 import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.repository.PostRepository;
+import com.watchweb.app.exception.BadRequestException;
+import com.watchweb.app.exception.InvalidOperationException;
 import com.watchweb.app.domain.user.repository.UserRepository;
 import com.watchweb.app.exception.ResourceNotFoundException;
 import com.watchweb.app.infrastructure.storage.StorageFolder;
@@ -29,19 +33,22 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagNameNormalizer hashtagNameNormalizer;
     private final StorageService storageService;
+    private final PostContentSanitizer contentSanitizer;
 
     public PostService(
             PostRepository postRepository,
             UserRepository userRepository,
             HashtagService hashtagService,
             HashtagNameNormalizer hashtagNameNormalizer,
-            StorageService storageService
+            StorageService storageService,
+            PostContentSanitizer contentSanitizer
     ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.hashtagService = hashtagService;
         this.hashtagNameNormalizer = hashtagNameNormalizer;
         this.storageService = storageService;
+        this.contentSanitizer = contentSanitizer;
     }
 
     @Transactional
@@ -49,7 +56,22 @@ public class PostService {
         var author = userRepository.findById(authorId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + authorId));
 
-        var post = new Post(author, request.title().trim(), request.content().trim());
+        var post = new Post(author, request.title().trim(), sanitizeSubmittedContent(request.content()));
+        post.replaceHashtags(hashtagService.resolve(request.hashtags()));
+        return PostResponse.fromEntity(postRepository.saveAndFlush(post));
+    }
+
+    @Transactional
+    public PostResponse createDraft(UUID authorId, SavePostDraftRequest request) {
+        var author = userRepository.findById(authorId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + authorId));
+
+        var post = new Post(
+                author,
+                request.title().trim(),
+                contentSanitizer.sanitize(request.content()),
+                PostStatus.DRAFT
+        );
         post.replaceHashtags(hashtagService.resolve(request.hashtags()));
         return PostResponse.fromEntity(postRepository.saveAndFlush(post));
     }
@@ -62,8 +84,35 @@ public class PostService {
         if (!post.getAuthor().getId().equals(authorId)) {
             throw new AccessDeniedException("Post belongs to another user");
         }
+        if (post.isDraft()) {
+            throw new InvalidOperationException("Draft must be updated through the draft endpoint");
+        }
 
-        post.updateByAuthor(request.title().trim(), request.content().trim());
+        post.updateByAuthor(request.title().trim(), sanitizeSubmittedContent(request.content()));
+        post.replaceHashtags(hashtagService.resolve(request.hashtags()));
+        return PostResponse.fromEntity(postRepository.saveAndFlush(post));
+    }
+
+    @Transactional
+    public PostResponse updateDraft(UUID postId, UUID authorId, SavePostDraftRequest request) {
+        var post = findExistingOwnPost(postId, authorId);
+        if (!post.isDraft()) {
+            throw new InvalidOperationException("Only a draft can be saved as a draft");
+        }
+
+        post.updateDraft(request.title().trim(), contentSanitizer.sanitize(request.content()));
+        post.replaceHashtags(hashtagService.resolve(request.hashtags()));
+        return PostResponse.fromEntity(postRepository.saveAndFlush(post));
+    }
+
+    @Transactional
+    public PostResponse submitForModeration(UUID postId, UUID authorId, CreatePostRequest request) {
+        var post = findExistingOwnPost(postId, authorId);
+        if (!post.isDraft()) {
+            throw new InvalidOperationException("Post is already submitted: " + postId);
+        }
+
+        post.submitForModeration(request.title().trim(), sanitizeSubmittedContent(request.content()));
         post.replaceHashtags(hashtagService.resolve(request.hashtags()));
         return PostResponse.fromEntity(postRepository.saveAndFlush(post));
     }
@@ -132,6 +181,16 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + id));
     }
 
+    @Transactional(readOnly = true)
+    public PostResponse getMineById(UUID id, UUID authorId) {
+        return PostResponse.fromEntity(findExistingOwnPost(id, authorId));
+    }
+
+    public PostImageResponse uploadContentImage(MultipartFile file) {
+        var storedFile = storageService.store(file, StorageFolder.POST_IMAGES);
+        return new PostImageResponse(storedFile.url());
+    }
+
     private String normalizeQuery(String query) {
         if (query == null || query.isBlank()) {
             return null;
@@ -159,5 +218,23 @@ public class PostService {
             return postRepository.searchApprovedByText(PostStatus.APPROVED, query, pageable);
         }
         return postRepository.searchApprovedByTextAndHashtag(PostStatus.APPROVED, query, hashtag, pageable);
+    }
+
+    private String sanitizeSubmittedContent(String content) {
+        var sanitizedContent = contentSanitizer.sanitize(content);
+        if (!contentSanitizer.hasMeaningfulContent(sanitizedContent)) {
+            throw new BadRequestException("Post content is required");
+        }
+        return sanitizedContent;
+    }
+
+    private Post findExistingOwnPost(UUID postId, UUID authorId) {
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found: " + postId));
+
+        if (!post.getAuthor().getId().equals(authorId)) {
+            throw new AccessDeniedException("Post belongs to another user");
+        }
+        return post;
     }
 }

@@ -1,7 +1,9 @@
 package com.watchweb.app.domain.post.controller;
 
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
+import com.watchweb.app.domain.post.dto.PostImageResponse;
 import com.watchweb.app.domain.post.dto.PostResponse;
+import com.watchweb.app.domain.post.dto.SavePostDraftRequest;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.service.PostService;
@@ -96,6 +98,20 @@ public class PostController {
         return postService.listMine(principal.getId(), status, pageable);
     }
 
+    @GetMapping("/me/{id}")
+    @Operation(
+            summary = "Get my post",
+            description = "Returns an authenticated user's own post, including private drafts."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    public PostResponse getMineById(
+            @Parameter(description = "Post identifier", required = true)
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return postService.getMineById(id, principal.getId());
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get approved post by id", description = "Returns one approved community post by identifier.")
     @ApiResponses({
@@ -145,6 +161,17 @@ public class PostController {
         return postService.create(principal.getId(), request);
     }
 
+    @PostMapping("/drafts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create post draft", description = "Saves a private working copy without sending it to moderation.")
+    @SecurityRequirement(name = "bearerAuth")
+    public PostResponse createDraft(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody SavePostDraftRequest request
+    ) {
+        return postService.createDraft(principal.getId(), request);
+    }
+
     @PutMapping("/{id}")
     @Operation(
             summary = "Update own post",
@@ -185,6 +212,41 @@ public class PostController {
             @Valid @RequestBody UpdatePostRequest request
     ) {
         return postService.update(id, principal.getId(), request);
+    }
+
+    @PutMapping("/{id}/draft")
+    @Operation(summary = "Update post draft", description = "Saves changes to a private draft without sending it to moderation.")
+    @SecurityRequirement(name = "bearerAuth")
+    public PostResponse updateDraft(
+            @Parameter(description = "Post identifier", required = true)
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody SavePostDraftRequest request
+    ) {
+        return postService.updateDraft(id, principal.getId(), request);
+    }
+
+    @PostMapping("/{id}/submit")
+    @Operation(summary = "Submit post draft", description = "Sends a private draft to moderation as pending.")
+    @SecurityRequirement(name = "bearerAuth")
+    public PostResponse submitForModeration(
+            @Parameter(description = "Post identifier", required = true)
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody CreatePostRequest request
+    ) {
+        return postService.submitForModeration(id, principal.getId(), request);
+    }
+
+    @PostMapping(path = "/content-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Upload post content image", description = "Uploads a JPG, PNG or WEBP image for insertion into rich post content.")
+    @SecurityRequirement(name = "bearerAuth")
+    public PostImageResponse uploadContentImage(
+            @Parameter(description = "Post content image file", required = true)
+            @RequestPart("file") MultipartFile file
+    ) {
+        return postService.uploadContentImage(file);
     }
 
     @PutMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

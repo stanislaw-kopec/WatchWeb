@@ -16,6 +16,7 @@ import com.watchweb.app.domain.hashtag.service.HashtagService;
 import com.watchweb.app.domain.notification.entity.NotificationType;
 import com.watchweb.app.domain.notification.service.NotificationService;
 import com.watchweb.app.domain.post.dto.CreatePostRequest;
+import com.watchweb.app.domain.post.dto.SavePostDraftRequest;
 import com.watchweb.app.domain.post.dto.UpdatePostRequest;
 import com.watchweb.app.domain.post.entity.PostStatus;
 import com.watchweb.app.domain.post.event.PostApprovedEvent;
@@ -92,6 +93,81 @@ class PostIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.authorId()).isEqualTo(user.user().id());
         assertThat(response.status()).isEqualTo(PostStatus.PENDING);
         assertThat(postRepository.findById(response.id()).orElseThrow().getStatus()).isEqualTo(PostStatus.PENDING);
+    }
+
+    @Test
+    void savesUserPostDraftAsPrivate() {
+        var user = authService.register(new RegisterRequest("postdraftauthor", "postdraftauthor@example.com", "StrongPassword123"));
+
+        var response = postService.createDraft(
+                user.user().id(),
+                new SavePostDraftRequest("Draft title", "<p>Draft content</p>", List.of("#Draft"))
+        );
+
+        assertThat(response.status()).isEqualTo(PostStatus.DRAFT);
+        assertThat(response.title()).isEqualTo("Draft title");
+        assertThat(response.content()).isEqualTo("<p>Draft content</p>");
+        assertThat(response.hashtags()).containsExactly("draft");
+        assertThatThrownBy(() -> postService.getApprovedById(response.id()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found: " + response.id());
+        assertThat(postModerationService.list(PostStatus.PENDING, PageRequest.of(0, 20)).getContent())
+                .noneSatisfy(post -> assertThat(post.id()).isEqualTo(response.id()));
+    }
+
+    @Test
+    void updatesDraftWithoutSubmittingToModeration() {
+        var user = authService.register(new RegisterRequest("postdraftupdate", "postdraftupdate@example.com", "StrongPassword123"));
+        var draft = postService.createDraft(user.user().id(), new SavePostDraftRequest("", "", List.of()));
+
+        var response = postService.updateDraft(
+                draft.id(),
+                user.user().id(),
+                new SavePostDraftRequest("Updated draft", "<p>Still private</p>", List.of("Private"))
+        );
+
+        assertThat(response.status()).isEqualTo(PostStatus.DRAFT);
+        assertThat(response.title()).isEqualTo("Updated draft");
+        assertThat(response.content()).isEqualTo("<p>Still private</p>");
+        assertThat(response.hashtags()).containsExactly("private");
+        assertThat(postModerationService.list(null, PageRequest.of(0, 200)).getContent())
+                .noneSatisfy(post -> assertThat(post.id()).isEqualTo(draft.id()));
+    }
+
+    @Test
+    void submitsDraftToPendingModeration() {
+        var user = authService.register(new RegisterRequest("postdraftsubmit", "postdraftsubmit@example.com", "StrongPassword123"));
+        var draft = postService.createDraft(user.user().id(), new SavePostDraftRequest("Draft", "<p>Private</p>", List.of("draft")));
+
+        var response = postService.submitForModeration(
+                draft.id(),
+                user.user().id(),
+                new CreatePostRequest("Ready post", "<p>Ready for review</p>", List.of("ready"))
+        );
+
+        assertThat(response.status()).isEqualTo(PostStatus.PENDING);
+        assertThat(response.title()).isEqualTo("Ready post");
+        assertThat(response.content()).isEqualTo("<p>Ready for review</p>");
+        assertThat(response.hashtags()).containsExactly("ready");
+        assertThat(postRepository.findById(draft.id()).orElseThrow().getStatus()).isEqualTo(PostStatus.PENDING);
+    }
+
+    @Test
+    void sanitizesRichPostContent() {
+        var user = authService.register(new RegisterRequest("postrichcontent", "postrichcontent@example.com", "StrongPassword123"));
+
+        var response = postService.create(
+                user.user().id(),
+                new CreatePostRequest(
+                        "Rich content",
+                        "<p>Hello <strong>watch</strong><script>alert('x')</script></p><img src=\"/api/files/post-images/safe.webp\" onerror=\"alert(1)\">",
+                        List.of()
+                )
+        );
+
+        assertThat(response.content()).contains("<strong>watch</strong>");
+        assertThat(response.content()).contains("<img src=\"/api/files/post-images/safe.webp\">");
+        assertThat(response.content()).doesNotContain("script", "onerror");
     }
 
     @Test
@@ -400,6 +476,41 @@ class PostIntegrationTest extends AbstractIntegrationTest {
         var filename = response.imageUrl().substring(response.imageUrl().lastIndexOf('/') + 1);
         var resource = storageService.load("post-images", filename);
         assertThat(resource.getInputStream().readAllBytes()).isEqualTo("post-image-content".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void updatesDraftPostImageAndKeepsItDraft() {
+        var user = authService.register(new RegisterRequest("postdraftimage", "postdraftimage@example.com", "StrongPassword123"));
+        var draft = postService.createDraft(user.user().id(), new SavePostDraftRequest("Draft with image", "", List.of()));
+        var file = new MockMultipartFile(
+                "file",
+                "draft-image.webp",
+                "image/webp",
+                "draft-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = postService.updateImage(draft.id(), user.user().id(), file);
+
+        assertThat(response.imageUrl()).startsWith("/api/files/post-images/");
+        assertThat(response.status()).isEqualTo(PostStatus.DRAFT);
+    }
+
+    @Test
+    void uploadsPostContentImage() throws Exception {
+        var file = new MockMultipartFile(
+                "file",
+                "inline-post-image.png",
+                "image/png",
+                "inline-image-content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        var response = postService.uploadContentImage(file);
+
+        assertThat(response.url()).startsWith("/api/files/post-images/");
+        assertThat(response.url()).endsWith(".png");
+        var filename = response.url().substring(response.url().lastIndexOf('/') + 1);
+        var resource = storageService.load("post-images", filename);
+        assertThat(resource.getInputStream().readAllBytes()).isEqualTo("inline-image-content".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test

@@ -1,4 +1,4 @@
-export type PostStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type PostStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
 export type Post = {
   id: string
