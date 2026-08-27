@@ -23,7 +23,7 @@ export function MyArticleCard({ article, actions }: MyArticleCardProps) {
     <Card className="overflow-hidden">
       <div className="grid gap-0 lg:grid-cols-[240px_1fr]">
         {article.headerImageUrl ? (
-          <img alt="" className="h-48 w-full object-cover lg:h-full" src={article.headerImageUrl} />
+          <img alt="" className="h-48 w-full bg-secondary/45 object-contain lg:h-full" src={article.headerImageUrl} />
         ) : (
           <div className="flex min-h-48 items-center justify-center bg-secondary text-primary">
             <Newspaper className="size-12" aria-hidden="true" />

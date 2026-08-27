@@ -12,7 +12,9 @@ export function ArticleHeroVisual({ article, variant = 'card' }: ArticleHeroVisu
     return (
       <img
         alt=""
-        className={variant === 'hero' ? 'h-full min-h-72 w-full object-cover' : 'h-56 w-full object-cover lg:h-full'}
+        className={variant === 'hero'
+          ? 'h-full min-h-72 w-full bg-secondary/45 object-contain'
+          : 'h-56 w-full bg-secondary/45 object-contain lg:h-full'}
         loading="lazy"
         src={article.headerImageUrl}
       />
