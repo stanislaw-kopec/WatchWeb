@@ -1,88 +1,202 @@
 # WatchWeb
 
-Full-stack aplikacji dla pasjonatow zegarkow.
+![Java](https://img.shields.io/badge/Java-25-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen)
+![React](https://img.shields.io/badge/React-19-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 
-Projekt laczy:
+WatchWeb to pełna aplikacja webowa dla pasjonatów zegarków. Projekt łączy portal społecznościowy, blog branżowy, katalog modeli zegarków, recenzje, komentarze, moderację treści oraz panel administracyjny.
 
-* portal spolecznosciowy dla wlascicieli i fanow zegarkow,
-* blog branzowy,
-* katalog zegarkow,
-* system recenzji i ocen.
+Repozytorium zostało przygotowane jako projekt portfolio/CV: pokazuje praktyczne użycie nowoczesnej Javy, Spring Boota, Reacta, TypeScriptu, PostgreSQL, migracji bazodanowych, autoryzacji JWT oraz testów integracyjnych.
 
-## Glowne zalozenia
+## Najważniejsze funkcje
 
-* Backend: Java 25, Spring Boot 4.1.x.
-* Frontend: React w osobnym katalogu `frontend/`.
-* Architektura package-by-feature pod domenami biznesowymi.
-* REST API zabezpieczone przez Spring Security, JWT i refresh tokeny.
-* Dokumentacja REST API przez OpenAPI 3 i Swagger UI.
-* PostgreSQL jako podstawowa baza danych.
-* Flyway do migracji schematu.
-* Testy jednostkowe i integracyjne z JUnit 5 oraz Testcontainers.
+- Rejestracja, logowanie, JWT access token i refresh token.
+- Role użytkowników: `ROLE_USER`, `ROLE_JOURNALIST`, `ROLE_MODERATOR`, `ROLE_ADMIN`.
+- Publiczny katalog zegarków z filtrowaniem po marce, mechanizmie, średnicy i wodoszczelności.
+- Zgłaszanie nowych zegarków do katalogu z moderacją i statusem zgłoszenia.
+- Posty społecznościowe z systemem szkiców, edycją rich-text, obrazkami i hashtagami.
+- Moderacja postów: akceptacja, odrzucenie z powodem i powiadomienia dla autora.
+- Artykuły branżowe dla dziennikarzy z wersjami roboczymi, publikacją, obrazem nagłówkowym i treścią rich-text.
+- Recenzje zegarków z oceną 1-10 oraz automatycznie aktualizowaną średnią ocen i liczbą opinii.
+- Komentarze drzewiaste pod zegarkami i postami z limitem głębokości oraz soft delete.
+- Profil użytkownika, avatar, zmiana danych, zmiana hasła i anonimizacja konta.
+- Centrum powiadomień dotyczących decyzji moderacyjnych.
+- Panel administratora do zarządzania rolami użytkowników.
+- Dokumentacja API przez OpenAPI / Swagger UI.
 
-## Dokumentacja
+## Tech stack
 
-Szczegolowe wymagania projektowe znajduja sie w [docs/PROJECT.md](docs/PROJECT.md).
+| Obszar | Technologie |
+| --- | --- |
+| Backend | Java 25, Spring Boot 4.1, Spring MVC, Spring Security |
+| API | REST, OpenAPI 3, Swagger UI |
+| Auth | JWT, refresh tokens, BCrypt, role-based access control |
+| Baza danych | PostgreSQL, Spring Data JPA, Hibernate, Flyway |
+| Frontend | React 19, TypeScript, Vite, React Router |
+| Stan i formularze | TanStack Query, React Hook Form, Zod |
+| UI | Tailwind CSS, komponenty shadcn/ui-style, lucide-react |
+| Pliki | Abstrakcja `StorageService`, lokalny storage w development |
+| Testy | JUnit 5, Testcontainers |
+| DevOps | Docker Compose, Nginx jako serwer frontendu i reverse proxy `/api` |
 
-Lista brakujacych widokow i akcji frontendu znajduje sie w [docs/FRONTEND_TODO.md](docs/FRONTEND_TODO.md).
+## Co projekt pokazuje technicznie
 
-Zasady pracy nad kodem i konwencje architektoniczne sa opisane w [AGENTS.md](AGENTS.md).
+- Projektowanie aplikacji w podejściu package-by-feature.
+- Oddzielenie DTO od encji JPA i jawne mapowanie odpowiedzi API.
+- Autoryzację opartą o role bez omijania reguł biznesowych po stronie backendu.
+- Migracje schematu bazy danych przez Flyway zamiast ręcznych zmian w bazie.
+- Dynamiczne filtrowanie katalogu zegarków z użyciem JPA Specifications.
+- Spójny cykl życia treści: szkic, oczekiwanie na moderację, publikacja, odrzucenie.
+- Obsługę plików przez warstwę abstrakcji, bez zapisywania binarek w bazie danych.
+- Testy integracyjne uruchamiane na prawdziwym PostgreSQL przez Testcontainers.
+- Frontend oparty o typowane API, reusable UI, obsługę loading/error/empty state i responsywne widoki.
 
-## Struktura repozytorium
+## Architektura
+
+Backend jest zorganizowany domenowo, a nie warstwowo. Logika biznesowa znajduje się w modułach pod `domain/<feature>`, natomiast konfiguracja, bezpieczeństwo, storage i obsługa błędów są trzymane jako techniczne elementy globalne.
 
 ```text
-backend/   Spring Boot API
-frontend/  React UI
-docs/      dokumentacja projektu
+backend/src/main/java/com/watchweb/app
+├── config
+├── exception
+├── infrastructure
+│   └── storage
+├── security
+└── domain
+    ├── article
+    ├── auth
+    ├── comment
+    ├── hashtag
+    ├── notification
+    ├── post
+    ├── review
+    ├── user
+    └── watch
 ```
 
-## Uruchomienie
-
-Najprostszy sposob uruchomienia calej aplikacji przez Docker Compose:
-
-```powershell
-docker compose up --build
-```
-
-Po starcie aplikacji dostepne sa:
+Frontend używa struktury feature-oriented:
 
 ```text
-Frontend:   http://localhost:3000
-Swagger UI: http://localhost:8081/swagger-ui.html
-pgAdmin:    http://localhost:5050
+frontend/src
+├── app
+├── pages
+├── features
+├── entities
+└── shared
 ```
 
-Kontener frontendu przekazuje zapytania `http://localhost:3000/api/...` do backendu.
+Najważniejsza zasada przepływu zależności:
 
-## Utworzenie frontendu
+```text
+app -> pages -> features -> entities -> shared
+```
 
-Projekt React najlepiej utworzyc przez Vite:
+## Główne domeny aplikacji
+
+```mermaid
+flowchart LR
+    Auth[Auth i role] --> User[Profil użytkownika]
+    User --> Posts[Posty społecznościowe]
+    User --> Reviews[Recenzje]
+    User --> WatchSubmissions[Zgłoszenia zegarków]
+    Posts --> Comments[Komentarze]
+    Posts --> Moderation[Moderacja]
+    WatchSubmissions --> Moderation
+    Moderation --> Notifications[Powiadomienia]
+    WatchSubmissions --> Catalog[Katalog zegarków]
+    Catalog --> Reviews
+    Catalog --> Comments
+    Journalist[Dziennikarz] --> Articles[Artykuły branżowe]
+```
+
+## Uruchomienie lokalne
+
+Najprostszy sposób uruchomienia całej aplikacji:
 
 ```powershell
-npm create vite@latest frontend -- --template react-ts
-cd frontend
-npm install
-npm run dev
+docker compose up -d --build
 ```
 
-W Docker Compose frontend jest budowany jako statyczna aplikacja i serwowany przez Nginx.
+Po uruchomieniu dostępne są:
 
-## Dane startowe
+| Usługa | Adres |
+| --- | --- |
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8081/api |
+| Swagger UI | http://localhost:8081/swagger-ui.html |
+| OpenAPI JSON | http://localhost:8081/v3/api-docs |
+| pgAdmin | http://localhost:5050 |
+| PostgreSQL | localhost:5433 |
 
-Uruchomienie przez Docker Compose wlacza profil `dev`, ktory automatycznie tworzy przykladowe dane do testowania API i przyszlego frontendu.
+Frontend działa jako statyczna aplikacja serwowana przez Nginx. Zapytania z `/api/...` są proxy'owane do backendu.
 
-Haslo dla wszystkich kont demo:
+## Konta demo
+
+Profil `dev` automatycznie ładuje dane startowe. Hasło dla kont demo:
 
 ```text
 Password123
 ```
 
-Konta demo:
+| Email | Rola |
+| --- | --- |
+| `admin@watchweb.local` | administrator |
+| `moderator@watchweb.local` | moderator |
+| `journalist@watchweb.local` | dziennikarz |
+| `user@watchweb.local` | użytkownik |
+| `collector@watchweb.local` | użytkownik |
 
-```text
-admin@watchweb.local
-moderator@watchweb.local
-journalist@watchweb.local
-user@watchweb.local
-collector@watchweb.local
+## Przydatne komendy
+
+Backend:
+
+```powershell
+cd backend
+.\mvnw.cmd test
 ```
+
+Frontend:
+
+```powershell
+cd frontend
+npm ci
+npm run lint
+npm run build
+```
+
+Cała aplikacja:
+
+```powershell
+docker compose up -d --build
+docker compose down
+```
+
+## Testy i jakość
+
+Projekt zawiera testy integracyjne dla kluczowych części backendu, między innymi:
+
+- autoryzacji i refresh tokenów,
+- użytkowników i ról,
+- postów oraz moderacji,
+- artykułów i szkiców,
+- katalogu zegarków i zgłoszeń,
+- recenzji i aktualizacji średniej oceny,
+- komentarzy,
+- hashtagów,
+- storage plików,
+- danych startowych profilu `dev`.
+
+Frontend jest weryfikowany przez ESLint oraz produkcyjny build Vite/TypeScript.
+
+## Status projektu
+
+Projekt jest rozwijany jako aplikacja portfolio. Główne moduły są zaimplementowane i uruchamiane lokalnie przez Docker Compose. Naturalne następne kroki rozwoju to dodanie testów frontendowych, E2E dla najważniejszych ścieżek użytkownika oraz produkcyjnej implementacji storage zgodnej z S3/MinIO.
+
+## Dokumentacja
+
+- [Wymagania projektu](docs/PROJECT.md)
+- [Zasady pracy i konwencje backendu](AGENTS.md)
+- [Zasady pracy i konwencje frontendu](frontend/AGENTS.md)
