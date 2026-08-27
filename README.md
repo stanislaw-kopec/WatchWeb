@@ -7,56 +7,57 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 
-WatchWeb to pełna aplikacja webowa dla pasjonatów zegarków. Projekt łączy portal społecznościowy, blog branżowy, katalog modeli zegarków, recenzje, komentarze, moderację treści oraz panel administracyjny.
+WatchWeb is a full-stack web application for watch enthusiasts. It combines a community portal, industry articles, a watch catalog, reviews, comments, content moderation, notifications, and an admin panel.
 
-Repozytorium zostało przygotowane jako projekt portfolio/CV: pokazuje praktyczne użycie nowoczesnej Javy, Spring Boota, Reacta, TypeScriptu, PostgreSQL, migracji bazodanowych, autoryzacji JWT oraz testów integracyjnych.
+The repository is designed as a portfolio/CV project. It demonstrates practical use of modern Java, Spring Boot, React, TypeScript, PostgreSQL, database migrations, JWT-based authentication, role-based authorization, file uploads, and integration testing.
 
-## Najważniejsze funkcje
+## Key features
 
-- Rejestracja, logowanie, JWT access token i refresh token.
-- Role użytkowników: `ROLE_USER`, `ROLE_JOURNALIST`, `ROLE_MODERATOR`, `ROLE_ADMIN`.
-- Publiczny katalog zegarków z filtrowaniem po marce, mechanizmie, średnicy i wodoszczelności.
-- Zgłaszanie nowych zegarków do katalogu z moderacją i statusem zgłoszenia.
-- Posty społecznościowe z systemem szkiców, edycją rich-text, obrazkami i hashtagami.
-- Moderacja postów: akceptacja, odrzucenie z powodem i powiadomienia dla autora.
-- Artykuły branżowe dla dziennikarzy z wersjami roboczymi, publikacją, obrazem nagłówkowym i treścią rich-text.
-- Recenzje zegarków z oceną 1-10 oraz automatycznie aktualizowaną średnią ocen i liczbą opinii.
-- Komentarze drzewiaste pod zegarkami i postami z limitem głębokości oraz soft delete.
-- Profil użytkownika, avatar, zmiana danych, zmiana hasła i anonimizacja konta.
-- Centrum powiadomień dotyczących decyzji moderacyjnych.
-- Panel administratora do zarządzania rolami użytkowników.
-- Dokumentacja API przez OpenAPI / Swagger UI.
+- User registration and login with JWT access tokens and refresh tokens.
+- Role-based access control with `ROLE_USER`, `ROLE_JOURNALIST`, `ROLE_MODERATOR`, and `ROLE_ADMIN`.
+- Public watch catalog with filtering by brand, movement type, case diameter, and water resistance.
+- Watch catalog submissions with moderation, approval, rejection reason, and user-facing status tracking.
+- Community posts with drafts, rich-text editing, images, hashtags, and moderation workflow.
+- Post moderation with approval, rejection reason, and notifications for the author.
+- Industry articles for journalists with drafts, publishing, rich-text content, and header images.
+- Watch reviews with ratings from 1 to 10 and automatically maintained average rating and review count.
+- Threaded comments for watches and posts with maximum depth and soft delete.
+- User profile management, avatar upload, profile editing, password change, and account anonymization.
+- Notification center for moderation decisions.
+- Admin panel for user role management.
+- OpenAPI / Swagger UI documentation for the REST API.
 
 ## Tech stack
 
-| Obszar | Technologie |
+| Area | Technologies |
 | --- | --- |
 | Backend | Java 25, Spring Boot 4.1, Spring MVC, Spring Security |
 | API | REST, OpenAPI 3, Swagger UI |
-| Auth | JWT, refresh tokens, BCrypt, role-based access control |
-| Baza danych | PostgreSQL, Spring Data JPA, Hibernate, Flyway |
+| Authentication | JWT, refresh tokens, BCrypt, role-based access control |
+| Database | PostgreSQL, Spring Data JPA, Hibernate, Flyway |
 | Frontend | React 19, TypeScript, Vite, React Router |
-| Stan i formularze | TanStack Query, React Hook Form, Zod |
-| UI | Tailwind CSS, komponenty shadcn/ui-style, lucide-react |
-| Pliki | Abstrakcja `StorageService`, lokalny storage w development |
-| Testy | JUnit 5, Testcontainers |
-| DevOps | Docker Compose, Nginx jako serwer frontendu i reverse proxy `/api` |
+| State and forms | TanStack Query, React Hook Form, Zod |
+| UI | Tailwind CSS, shadcn/ui-style components, lucide-react |
+| File handling | `StorageService` abstraction, local storage for development |
+| Testing | JUnit 5, Testcontainers |
+| DevOps | Docker Compose, Nginx for frontend hosting and `/api` reverse proxy |
 
-## Co projekt pokazuje technicznie
+## What this project demonstrates
 
-- Projektowanie aplikacji w podejściu package-by-feature.
-- Oddzielenie DTO od encji JPA i jawne mapowanie odpowiedzi API.
-- Autoryzację opartą o role bez omijania reguł biznesowych po stronie backendu.
-- Migracje schematu bazy danych przez Flyway zamiast ręcznych zmian w bazie.
-- Dynamiczne filtrowanie katalogu zegarków z użyciem JPA Specifications.
-- Spójny cykl życia treści: szkic, oczekiwanie na moderację, publikacja, odrzucenie.
-- Obsługę plików przez warstwę abstrakcji, bez zapisywania binarek w bazie danych.
-- Testy integracyjne uruchamiane na prawdziwym PostgreSQL przez Testcontainers.
-- Frontend oparty o typowane API, reusable UI, obsługę loading/error/empty state i responsywne widoki.
+- Feature-oriented backend architecture with package-by-feature organization.
+- Clear separation between API DTOs and JPA entities.
+- Explicit business rules for publishing, moderation, drafts, reviews, comments, and account handling.
+- Role-based authorization enforced on the backend.
+- Database schema versioning with Flyway migrations.
+- Dynamic watch catalog filtering with JPA Specifications.
+- Content lifecycle management: draft, pending moderation, published, rejected.
+- File upload handling through a storage abstraction instead of storing binary data in the database.
+- Integration tests using a real PostgreSQL database through Testcontainers.
+- Frontend built with typed API calls, reusable UI components, responsive layouts, and consistent loading, error, and empty states.
 
-## Architektura
+## Architecture
 
-Backend jest zorganizowany domenowo, a nie warstwowo. Logika biznesowa znajduje się w modułach pod `domain/<feature>`, natomiast konfiguracja, bezpieczeństwo, storage i obsługa błędów są trzymane jako techniczne elementy globalne.
+The backend follows a domain-oriented structure instead of a traditional layer-based layout. Business logic is grouped under `domain/<feature>`, while global technical concerns such as configuration, security, storage, and exception handling live outside the domain packages.
 
 ```text
 backend/src/main/java/com/watchweb/app
@@ -77,7 +78,7 @@ backend/src/main/java/com/watchweb/app
     └── watch
 ```
 
-Frontend używa struktury feature-oriented:
+The frontend uses a feature-oriented React structure:
 
 ```text
 frontend/src
@@ -88,41 +89,41 @@ frontend/src
 └── shared
 ```
 
-Najważniejsza zasada przepływu zależności:
+Main dependency direction:
 
 ```text
 app -> pages -> features -> entities -> shared
 ```
 
-## Główne domeny aplikacji
+## Main application domains
 
 ```mermaid
 flowchart LR
-    Auth[Auth i role] --> User[Profil użytkownika]
-    User --> Posts[Posty społecznościowe]
-    User --> Reviews[Recenzje]
-    User --> WatchSubmissions[Zgłoszenia zegarków]
-    Posts --> Comments[Komentarze]
-    Posts --> Moderation[Moderacja]
+    Auth[Auth and roles] --> User[User profile]
+    User --> Posts[Community posts]
+    User --> Reviews[Reviews]
+    User --> WatchSubmissions[Watch submissions]
+    Posts --> Comments[Comments]
+    Posts --> Moderation[Moderation]
     WatchSubmissions --> Moderation
-    Moderation --> Notifications[Powiadomienia]
-    WatchSubmissions --> Catalog[Katalog zegarków]
+    Moderation --> Notifications[Notifications]
+    WatchSubmissions --> Catalog[Watch catalog]
     Catalog --> Reviews
     Catalog --> Comments
-    Journalist[Dziennikarz] --> Articles[Artykuły branżowe]
+    Journalist[Journalist] --> Articles[Industry articles]
 ```
 
-## Uruchomienie lokalne
+## Local setup
 
-Najprostszy sposób uruchomienia całej aplikacji:
+The easiest way to run the full application is Docker Compose:
 
 ```powershell
 docker compose up -d --build
 ```
 
-Po uruchomieniu dostępne są:
+After startup, the services are available at:
 
-| Usługa | Adres |
+| Service | URL |
 | --- | --- |
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:8081/api |
@@ -131,25 +132,25 @@ Po uruchomieniu dostępne są:
 | pgAdmin | http://localhost:5050 |
 | PostgreSQL | localhost:5433 |
 
-Frontend działa jako statyczna aplikacja serwowana przez Nginx. Zapytania z `/api/...` są proxy'owane do backendu.
+The frontend is served as a static application through Nginx. Requests to `/api/...` are proxied to the backend service.
 
-## Konta demo
+## Demo accounts
 
-Profil `dev` automatycznie ładuje dane startowe. Hasło dla kont demo:
+The `dev` profile automatically loads seed data. All demo accounts use the same password:
 
 ```text
 Password123
 ```
 
-| Email | Rola |
+| Email | Role |
 | --- | --- |
 | `admin@watchweb.local` | administrator |
 | `moderator@watchweb.local` | moderator |
-| `journalist@watchweb.local` | dziennikarz |
-| `user@watchweb.local` | użytkownik |
-| `collector@watchweb.local` | użytkownik |
+| `journalist@watchweb.local` | journalist |
+| `user@watchweb.local` | user |
+| `collector@watchweb.local` | user |
 
-## Przydatne komendy
+## Useful commands
 
 Backend:
 
@@ -167,36 +168,30 @@ npm run lint
 npm run build
 ```
 
-Cała aplikacja:
+Full application:
 
 ```powershell
 docker compose up -d --build
 docker compose down
 ```
 
-## Testy i jakość
+## Tests and quality
 
-Projekt zawiera testy integracyjne dla kluczowych części backendu, między innymi:
+The backend includes integration tests for key areas of the application, including:
 
-- autoryzacji i refresh tokenów,
-- użytkowników i ról,
-- postów oraz moderacji,
-- artykułów i szkiców,
-- katalogu zegarków i zgłoszeń,
-- recenzji i aktualizacji średniej oceny,
-- komentarzy,
-- hashtagów,
-- storage plików,
-- danych startowych profilu `dev`.
+- authentication and refresh tokens,
+- users and roles,
+- posts and moderation,
+- articles and drafts,
+- watch catalog and submissions,
+- reviews and rating statistics,
+- comments,
+- hashtags,
+- file storage,
+- development seed data.
 
-Frontend jest weryfikowany przez ESLint oraz produkcyjny build Vite/TypeScript.
+The frontend is checked with ESLint and a production Vite/TypeScript build.
 
-## Status projektu
+## Project status
 
-Projekt jest rozwijany jako aplikacja portfolio. Główne moduły są zaimplementowane i uruchamiane lokalnie przez Docker Compose. Naturalne następne kroki rozwoju to dodanie testów frontendowych, E2E dla najważniejszych ścieżek użytkownika oraz produkcyjnej implementacji storage zgodnej z S3/MinIO.
-
-## Dokumentacja
-
-- [Wymagania projektu](docs/PROJECT.md)
-- [Zasady pracy i konwencje backendu](AGENTS.md)
-- [Zasady pracy i konwencje frontendu](frontend/AGENTS.md)
+WatchWeb is developed as a portfolio application. The main modules are implemented and can be run locally with Docker Compose. Natural next steps include frontend tests, end-to-end tests for the most important user flows, and a production-ready S3/MinIO storage implementation.
